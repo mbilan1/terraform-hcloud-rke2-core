@@ -1,0 +1,15 @@
+# Normalize line endings to LF on checkout
+* text=auto eol=lf
+
+# HCL files
+*.tf linguist-language=HCL
+*.tfvars linguist-language=HCL
+
+# Binary — never diff
+*.tfstate binary
+*.tfplan binary
+*.pem binary
+*.key binary
+
+# Lock file — generated, do not merge manually
+.terraform.lock.hcl linguist-generated merge=ours

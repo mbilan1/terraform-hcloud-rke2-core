@@ -1,0 +1,67 @@
+#cloud-config
+# ──────────────────────────────────────────────────────────────────────────────
+# RKE2 Control Plane Node — Cloud-Init Template
+#
+# DECISION: Single template with conditional blocks for initial vs joining nodes.
+# Why: Maintaining separate templates for initial and joining masters leads to
+#      drift. Conditional logic in one template keeps the config DRY.
+# ──────────────────────────────────────────────────────────────────────────────
+
+hostname: ${hostname}
+
+# DECISION: Configure SSH port via cloud-init, not just firewall.
+# Why: Defense in depth — if a firewall rule is misconfigured, the SSH port
+#      change still provides protection against default-port scanners.
+write_files:
+  # RKE2 server configuration
+  - path: /etc/rancher/rke2/config.yaml
+    permissions: "0600"
+    content: |
+      token: ${cluster_token}
+%{ if !is_initial ~}
+      server: https://${join_address}:9345
+%{ endif ~}
+      tls-san:
+        - ${hostname}
+%{ if rke2_config != "" ~}
+      ${indent(6, rke2_config)}
+%{ endif ~}
+
+  # SSH port configuration
+%{ if ssh_port != 22 ~}
+  - path: /etc/ssh/sshd_config.d/custom-port.conf
+    permissions: "0644"
+    content: |
+      Port ${ssh_port}
+%{ endif ~}
+
+runcmd:
+  # DECISION: Wait for cloud-init networking to stabilize before install.
+  # Why: Hetzner Cloud sometimes has a brief delay before the network interface
+  #      is fully configured. A small sleep prevents transient curl failures.
+  - sleep 5
+
+  # Install RKE2 server
+%{ if rke2_version != "" ~}
+  - curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${rke2_version}" sh -
+%{ else ~}
+  - curl -sfL https://get.rke2.io | sh -
+%{ endif ~}
+
+%{ if !is_initial ~}
+  # NOTE: Joining node connects to the initial master via its private IP,
+  #       which is resolved by Terraform before this node is created.
+%{ endif ~}
+
+  # Enable and start RKE2 server
+  - systemctl enable rke2-server.service
+  - systemctl start rke2-server.service
+
+  # Add RKE2 binaries to PATH
+  - echo 'export PATH=$PATH:/var/lib/rancher/rke2/bin' >> /etc/profile.d/rke2.sh
+  - echo 'export KUBECONFIG=/etc/rancher/rke2/rke2.yaml' >> /etc/profile.d/rke2.sh
+
+%{ if ssh_port != 22 ~}
+  # Restart SSH with new port
+  - systemctl restart sshd
+%{ endif ~}
