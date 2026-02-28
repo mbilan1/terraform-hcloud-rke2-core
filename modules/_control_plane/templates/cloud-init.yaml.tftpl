@@ -49,12 +49,8 @@ runcmd:
 %{ endif ~}
 
 %{ if !is_initial ~}
-  # DECISION: Resolve initial master's private IP at boot time via DNS/hosts.
-  # Why: Terraform cannot know the private IP until the initial master is
-  #      created. We could wire it through, but the private IP is assigned
-  #      by Hetzner after server creation via hcloud_server_network.
-  #      For joining nodes, we use the initial master's hostname which
-  #      resolves via the Hetzner private network DNS.
+  # NOTE: Joining node connects to the initial master via its private IP,
+  #       which is resolved by Terraform before this node is created.
 %{ endif ~}
 
   # Enable and start RKE2 server

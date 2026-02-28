@@ -33,8 +33,12 @@ locals {
 # Why: The token is a shared secret between control plane and workers.
 #      Generating it in the facade makes it available to both without
 #      creating a dependency between the two compute modules.
+#
+# NOTE: random_password results are auto-sensitive in OpenTofu, but the
+#       resource doesn't expose an explicit `sensitive` argument. The output
+#       is correctly marked sensitive in outputs.tf.
 resource "random_password" "cluster_token" {
-  count = var.create ? 1 : 0
+  for_each = var.create ? { this = true } : {}
 
   length  = 64
   special = false
@@ -95,7 +99,7 @@ module "control_plane" {
   ssh_key_ids   = compact([module.ssh_key.ssh_key_id])
   firewall_ids  = module.firewall.control_plane_firewall_ids
   network_id    = module.network.network_id
-  cluster_token = try(random_password.cluster_token[0].result, "")
+  cluster_token = try(random_password.cluster_token["this"].result, "")
   rke2_version  = var.rke2_version
   rke2_config   = var.rke2_config
   ssh_port      = var.ssh_port
@@ -114,10 +118,11 @@ module "control_plane" {
 module "readiness" {
   source = "./modules/_readiness"
 
+  # DECISION: Only pass IP — no SSH credentials needed.
+  # Why: Readiness uses HTTPS polling (curl to port 6443), not SSH.
+  #      Zero-SSH design: no private key dependency between primitives.
   create              = var.create
   initial_master_ipv4 = try(module.control_plane.initial_master_ipv4, "")
-  ssh_port            = var.ssh_port
-  ssh_private_key     = module.ssh_key.private_key_pem
 
   depends_on = [module.control_plane]
 }

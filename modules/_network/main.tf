@@ -18,13 +18,14 @@ locals {
 # ─── Network ──────────────────────────────────────────────────────────────────
 
 resource "hcloud_network" "this" {
-  count = local.create_network ? 1 : 0
+  for_each = local.create_network ? { this = true } : {}
 
   name     = "${var.name}-network"
   ip_range = var.ip_range
-  labels   = var.labels
 
   delete_protection = var.delete_protection
+
+  labels = var.labels
 
   lifecycle {
     # NOTE: Changing ip_range requires network recreation, which destroys all
@@ -37,9 +38,9 @@ resource "hcloud_network" "this" {
 # ─── Subnet ──────────────────────────────────────────────────────────────────
 
 resource "hcloud_network_subnet" "this" {
-  count = local.create_network ? 1 : 0
+  for_each = hcloud_network.this
 
-  network_id   = hcloud_network.this[0].id
+  network_id   = each.value.id
   type         = "cloud"
   network_zone = var.network_zone
   ip_range     = var.subnet_ip_range

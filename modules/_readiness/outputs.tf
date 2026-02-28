@@ -1,14 +1,15 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # _readiness — Outputs
 #
-# NOTE: The kubeconfig content cannot be captured from remote-exec output
-#       in the current implementation. A future iteration should use a
-#       file provisioner or external data source to retrieve it properly.
-# TODO: Implement kubeconfig output via remote provider or local-exec + SSH.
+# DECISION: No kubeconfig output — kubeconfig retrieval is Rancher's job.
+# Why: This module is pure L3 infrastructure. Kubeconfig is retrieved via the
+#      terraform-hcloud-rancher management module, which has Kubernetes API
+#      access post-bootstrap. This keeps the zero-SSH design clean.
+# See: docs/ARCHITECTURE.md — Kubeconfig Strategy
 # ──────────────────────────────────────────────────────────────────────────────
 
 output "cluster_ready" {
-  description = "Boolean indicating the cluster API server is responsive. Depends on the readiness check completing."
+  description = "Boolean indicating the cluster API server is reachable. Depends on the HTTPS readiness check completing."
   value       = var.create ? true : null
 
   depends_on = [terraform_data.wait_for_api]
@@ -16,5 +17,5 @@ output "cluster_ready" {
 
 output "api_ready_id" {
   description = "ID of the readiness check resource. Use as depends_on target."
-  value       = try(terraform_data.wait_for_api[0].id, null)
+  value       = try(terraform_data.wait_for_api["this"].id, null)
 }

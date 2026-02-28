@@ -20,10 +20,9 @@ locals {
 # ─── Control Plane Firewall ───────────────────────────────────────────────────
 
 resource "hcloud_firewall" "control_plane" {
-  count = local.create_control_plane_fw ? 1 : 0
+  for_each = local.create_control_plane_fw ? { this = true } : {}
 
-  name   = "${var.name}-cp-fw"
-  labels = var.labels
+  name = "${var.name}-cp-fw"
 
   # DECISION: SSH access is configurable but defaults to open.
   # Why: Development convenience. Production users should override
@@ -64,15 +63,16 @@ resource "hcloud_firewall" "control_plane" {
     protocol    = "icmp"
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
+
+  labels = var.labels
 }
 
 # ─── Worker Firewall ─────────────────────────────────────────────────────────
 
 resource "hcloud_firewall" "worker" {
-  count = local.create_worker_fw ? 1 : 0
+  for_each = local.create_worker_fw ? { this = true } : {}
 
-  name   = "${var.name}-worker-fw"
-  labels = var.labels
+  name = "${var.name}-worker-fw"
 
   # SSH access (same CIDR restrictions as control plane)
   dynamic "rule" {
@@ -111,4 +111,6 @@ resource "hcloud_firewall" "worker" {
     protocol    = "icmp"
     source_ips  = ["0.0.0.0/0", "::/0"]
   }
+
+  labels = var.labels
 }

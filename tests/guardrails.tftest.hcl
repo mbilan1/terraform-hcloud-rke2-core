@@ -111,3 +111,33 @@ run "delete_protection_on_no_advisory" {
 
   expect_failures = []
 }
+
+# ─── Location / network zone match ───────────────────────────────────────────
+
+run "location_zone_match_hel1_eu_central" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    location          = "hel1"
+    network_zone      = "eu-central"
+    delete_protection = true
+  }
+
+  expect_failures = []
+}
+
+run "location_zone_mismatch_warns" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    location          = "hel1"
+    network_zone      = "us-east"
+    delete_protection = true
+  }
+
+  expect_failures = [
+    check.location_network_zone_match,
+  ]
+}

@@ -1,5 +1,9 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # _readiness — Variables
+#
+# DECISION: Only two variables — create toggle and target IP.
+# Why: Zero-SSH design means no SSH port or private key needed. The readiness
+#      check uses HTTPS polling from the local machine, not SSH to the target.
 # ──────────────────────────────────────────────────────────────────────────────
 
 variable "create" {
@@ -12,19 +16,5 @@ variable "create" {
 variable "initial_master_ipv4" {
   description = "Public IPv4 address of the initial master node."
   type        = string
-  nullable    = false
-}
-
-variable "ssh_port" {
-  description = "SSH port for connecting to the initial master."
-  type        = number
-  default     = 22
-  nullable    = false
-}
-
-variable "ssh_private_key" {
-  description = "SSH private key for connecting to the initial master."
-  type        = string
-  sensitive   = true
   nullable    = false
 }

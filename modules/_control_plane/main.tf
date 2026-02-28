@@ -7,6 +7,13 @@
 #      identifiers: removing "cp-1" only destroys that one server.
 # See: docs/ARCHITECTURE.md — Node Identity
 #
+# DECISION: Initial master split from joining nodes into separate resources.
+# Why: Joining nodes need the initial master's private IP in their cloud-init
+#      (server: https://<ip>:9345). The private IP is only known after the
+#      initial master's hcloud_server_network is created. Splitting into
+#      two resources makes this dependency explicit and correct — joining
+#      nodes wait for the initial master to be fully networked.
+#
 # DECISION: Cloud-init via templatefile(), not the cloudinit provider.
 # Why: The cloudinit provider adds a dependency for minimal benefit. Raw
 #      templatefile() with a YAML template is simpler, produces readable
@@ -22,6 +29,11 @@ locals {
   sorted_node_keys = sort(keys(var.nodes))
   initial_master   = local.sorted_node_keys[0]
 
+  # DECISION: Joining nodes computed once for reuse in resources and outputs.
+  # Why: Avoids duplicating the filter expression. Single source of truth for
+  #      which nodes are joining vs initial.
+  joining_nodes = { for k, v in var.nodes : k => v if k != local.initial_master }
+
   # DECISION: Common labels merged with per-node labels.
   # Why: Cluster-wide labels (managed-by, cluster-name) apply to all nodes.
   #      Per-node labels (role-specific, custom) override cluster-wide ones.
@@ -32,37 +44,35 @@ locals {
   })
 }
 
-# ─── Server Instances ─────────────────────────────────────────────────────────
+# ─── Initial Master ───────────────────────────────────────────────────────────
 
-resource "hcloud_server" "this" {
-  for_each = var.create ? var.nodes : {}
+# NOTE: The initial master bootstraps the cluster. It is created first so that
+#       its private IP can be passed to joining nodes' cloud-init config.
+resource "hcloud_server" "initial" {
+  for_each = var.create ? { (local.initial_master) = var.nodes[local.initial_master] } : {}
 
-  name        = "${var.cluster_name}-${each.key}"
-  server_type = each.value.server_type
-  location    = coalesce(each.value.location, var.location)
-  image       = var.image
-  ssh_keys    = var.ssh_key_ids
-  labels      = merge(local.common_labels, each.value.labels)
-  backups     = each.value.backups
-
+  name         = "${var.cluster_name}-${each.key}"
+  server_type  = each.value.server_type
+  location     = coalesce(each.value.location, var.location)
+  image        = var.image
+  ssh_keys     = var.ssh_key_ids
+  backups      = each.value.backups
   firewall_ids = var.firewall_ids
 
   user_data = templatefile("${path.module}/templates/cloud-init.yaml.tftpl", {
-    hostname       = "${var.cluster_name}-${each.key}"
-    is_initial     = each.key == local.initial_master
-    rke2_version   = var.rke2_version
-    rke2_config    = var.rke2_config
-    cluster_token  = var.cluster_token
-    initial_master = "${var.cluster_name}-${local.initial_master}"
-    # DECISION: Join address uses private IP of the initial master.
-    # Why: Joining via public IP would expose the supervisor API to the
-    #      internet and add latency. Private networking is always configured.
-    join_address = each.key == local.initial_master ? "" : "RESOLVE_AT_BOOT"
-    ssh_port     = var.ssh_port
+    hostname      = "${var.cluster_name}-${each.key}"
+    is_initial    = true
+    rke2_version  = var.rke2_version
+    rke2_config   = var.rke2_config
+    cluster_token = var.cluster_token
+    join_address  = ""
+    ssh_port      = var.ssh_port
   })
 
   delete_protection  = var.delete_protection
   rebuild_protection = var.delete_protection
+
+  labels = merge(local.common_labels, each.value.labels)
 
   # COMPROMISE: ignore_changes on user_data.
   # Why: Cloud-init runs once at boot. Changing user_data forces server
@@ -79,11 +89,61 @@ resource "hcloud_server" "this" {
   }
 }
 
-# ─── Network Attachment ───────────────────────────────────────────────────────
+# ─── Initial Master Network Attachment ────────────────────────────────────────
 
-resource "hcloud_server_network" "this" {
-  for_each = var.create ? var.nodes : {}
+resource "hcloud_server_network" "initial" {
+  for_each = hcloud_server.initial
 
-  server_id  = hcloud_server.this[each.key].id
+  server_id  = each.value.id
+  network_id = var.network_id
+}
+
+# ─── Joining Nodes ────────────────────────────────────────────────────────────
+
+resource "hcloud_server" "joining" {
+  for_each = var.create ? local.joining_nodes : {}
+
+  name         = "${var.cluster_name}-${each.key}"
+  server_type  = each.value.server_type
+  location     = coalesce(each.value.location, var.location)
+  image        = var.image
+  ssh_keys     = var.ssh_key_ids
+  backups      = each.value.backups
+  firewall_ids = var.firewall_ids
+
+  user_data = templatefile("${path.module}/templates/cloud-init.yaml.tftpl", {
+    hostname      = "${var.cluster_name}-${each.key}"
+    is_initial    = false
+    rke2_version  = var.rke2_version
+    rke2_config   = var.rke2_config
+    cluster_token = var.cluster_token
+    # DECISION: Join via initial master's private IP from network attachment.
+    # Why: Using private IP keeps supervisor API traffic on the private network.
+    #      The IP is reliably known because hcloud_server_network.initial is
+    #      created before joining nodes due to the implicit dependency.
+    join_address = hcloud_server_network.initial[local.initial_master].ip
+    ssh_port     = var.ssh_port
+  })
+
+  delete_protection  = var.delete_protection
+  rebuild_protection = var.delete_protection
+
+  labels = merge(local.common_labels, each.value.labels)
+
+  lifecycle {
+    ignore_changes = [
+      user_data,
+      ssh_keys,
+      image,
+    ]
+  }
+}
+
+# ─── Joining Nodes Network Attachment ─────────────────────────────────────────
+
+resource "hcloud_server_network" "joining" {
+  for_each = hcloud_server.joining
+
+  server_id  = each.value.id
   network_id = var.network_id
 }

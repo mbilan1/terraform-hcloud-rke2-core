@@ -2,7 +2,9 @@
 
 ## Overview
 
-`terraform-hcloud-ubuntu-rke2-v2` deploys an RKE2 Kubernetes cluster on Hetzner Cloud using a **composable primitive** architecture. The root module is a thin facade that orchestrates 5 independent submodules.
+`terraform-hcloud-rke2-core` deploys an RKE2 Kubernetes cluster on Hetzner Cloud using a **composable primitive** architecture. The root module is a thin facade that orchestrates 5 independent submodules.
+
+This module operates at **L3 (infrastructure) only** with a **zero-SSH design** — no SSH provisioners, no remote-exec. All node configuration happens via cloud-init at boot time, and cluster readiness is verified via HTTPS polling against the Kubernetes API server.
 
 ## Module Composition
 
@@ -26,11 +28,23 @@ Root Facade (main.tf)
 │   └── cloud-init template        — RKE2 installation + config
 │
 └── module.readiness (_readiness/)
-    ├── wait_for_api               — SSH poll for API readiness
-    └── fetch_kubeconfig           — SSH retrieval of kubeconfig
+    └── wait_for_api               — HTTPS poll (curl to port 6443)
 ```
 
 ## Design Decisions
+
+### Zero-SSH Design Philosophy
+
+This module uses **no SSH connections** at any stage:
+- **Installation**: Cloud-init installs and configures RKE2 at boot — no remote-exec
+- **Readiness**: HTTPS polling (`curl -sk https://{ip}:6443/readyz`) — no SSH
+- **Kubeconfig**: Retrieved via the Rancher management module (`terraform-hcloud-rancher`), which has Kubernetes API access post-bootstrap — no SSH
+
+SSH keys are still created/uploaded purely for **operator access** (debugging, maintenance). The module itself never uses them.
+
+### Kubeconfig Strategy
+
+Kubeconfig is intentionally NOT an output of this module. It is retrieved by `terraform-hcloud-rancher`, which was built specifically for this purpose. This eliminates the need for SSH-based kubeconfig retrieval and keeps this module purely L3.
 
 ### Composable Primitives (Architecture #16)
 
@@ -39,7 +53,7 @@ Each submodule is independently usable. The facade wires them together but advan
 ```hcl
 # Use only the network primitive
 module "network" {
-  source = "astract/ubuntu-rke2-v2/hcloud//modules/_network"
+  source = "astract/rke2-core/hcloud//modules/_network"
   name   = "my-network"
 }
 ```
@@ -79,9 +93,9 @@ This module creates **infrastructure only** (L3). Kubernetes-level resources (L4
 
 This eliminates the chicken-and-egg problem of configuring kubernetes/helm providers in the same apply that creates the cluster.
 
-### Cloud-Init over SSH
+### Cloud-Init — Fully Immutable Bootstrap
 
-RKE2 is installed entirely via cloud-init `user_data`. No SSH-based provisioning for installation. SSH is used **only** in the readiness module for kubeconfig retrieval (documented as a COMPROMISE with a migration path to Packer images).
+RKE2 is installed entirely via cloud-init `user_data`. No SSH-based provisioning at any stage. This module follows an immutable infrastructure pattern — nodes are configured at creation and never modified in-place via SSH.
 
 ## Dependency Chain
 
@@ -95,9 +109,8 @@ Each step depends on outputs from previous steps, wired through the facade.
 
 | ID | Decision | Rationale | Migration Path |
 |----|----------|-----------|----------------|
-| C1 | SSH for kubeconfig retrieval | No API to fetch kubeconfig without prior auth | Packer pre-bake with push mechanism |
-| C2 | `ignore_changes` on user_data | Cloud-init is one-shot; changes force replacement | RKE2 runtime config management |
-| C3 | Join address resolution at boot | Private IPs assigned after server creation | Pre-allocated IPs (needs Hetzner API support) |
+| C1 | `ignore_changes` on user_data | Cloud-init is one-shot; changes force replacement | RKE2 runtime config management |
+| C2 | Join address resolution at boot | Private IPs assigned after server creation | Pre-allocated IPs (needs Hetzner API support) |
 
 ## Security Model
 
@@ -108,9 +121,13 @@ Each step depends on outputs from previous steps, wired through the facade.
 - **Sensitive outputs**: Private keys and tokens marked `sensitive = true`
 - **No secrets in state**: Cluster token is generated, not user-supplied
 
-## Known Gaps
+## Design Boundaries (By Design, Not Gaps)
 
-- No worker node support (planned, post-MVP)
-- No load balancer (planned: control-plane LB for HA, ingress LB for workloads)
-- No Packer image integration (planned for immutable infrastructure)
-- Kubeconfig not captured as output (remote-exec output limitation)
+The following items are intentionally **out of scope** for this module:
+
+| Item | Rationale | Where it lives |
+|------|-----------|---------------|
+| Worker nodes | Only control-plane nodes installed by default. Workers added as needed. | Future `_worker` primitive or consumer module |
+| Load balancer | Control-plane LB and ingress LB are separate concerns | Separate module (`terraform-hcloud-lb` or similar) |
+| Packer images | Image baking is a separate workflow with different lifecycle | Separate Packer configuration |
+| Kubeconfig retrieval | Zero-SSH design — kubeconfig fetched by Rancher module | `terraform-hcloud-rancher` |

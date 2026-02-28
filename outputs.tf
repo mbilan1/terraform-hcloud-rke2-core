@@ -42,8 +42,8 @@ output "ssh_key_id" {
 }
 
 output "ssh_private_key" {
-  description = "Auto-generated SSH private key (empty when BYO key is used)."
-  value       = try(module.ssh_key.private_key_pem, "")
+  description = "Auto-generated SSH private key in OpenSSH format (empty when BYO key is used)."
+  value       = try(module.ssh_key.private_key_openssh, "")
   sensitive   = true
 }
 
@@ -78,7 +78,7 @@ output "initial_master_ipv4" {
 
 output "cluster_token" {
   description = "RKE2 cluster registration token."
-  value       = try(random_password.cluster_token[0].result, "")
+  value       = try(random_password.cluster_token["this"].result, "")
   sensitive   = true
 }
 

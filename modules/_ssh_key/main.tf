@@ -14,7 +14,7 @@ locals {
 # ─── Generated Key Pair ──────────────────────────────────────────────────────
 
 resource "tls_private_key" "this" {
-  count = local.create_key ? 1 : 0
+  for_each = local.create_key ? { this = true } : {}
 
   algorithm = "ED25519"
 }
@@ -22,9 +22,10 @@ resource "tls_private_key" "this" {
 # ─── Hetzner SSH Key ─────────────────────────────────────────────────────────
 
 resource "hcloud_ssh_key" "this" {
-  count = var.create ? 1 : 0
+  for_each = var.create ? { this = true } : {}
 
   name       = "${var.name}-ssh-key"
-  public_key = local.create_key ? tls_private_key.this[0].public_key_openssh : var.public_key
-  labels     = var.labels
+  public_key = local.create_key ? tls_private_key.this["this"].public_key_openssh : var.public_key
+
+  labels = var.labels
 }

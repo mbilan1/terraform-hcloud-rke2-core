@@ -1,4 +1,4 @@
-# terraform-hcloud-ubuntu-rke2-v2
+# terraform-hcloud-rke2-core
 
 OpenTofu module to deploy a production-oriented **RKE2 Kubernetes cluster on Hetzner Cloud**.
 
@@ -16,7 +16,7 @@ OpenTofu module to deploy a production-oriented **RKE2 Kubernetes cluster on Het
 
 ```hcl
 module "rke2" {
-  source  = "astract/ubuntu-rke2-v2/hcloud"
+  source  = "astract/rke2-core/hcloud"
 
   cluster_name = "my-cluster"
   location     = "nbg1"

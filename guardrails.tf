@@ -31,14 +31,15 @@ check "byo_network_subnet_ignored" {
 # ─── Location / Network Zone Consistency ──────────────────────────────────────
 
 check "location_network_zone_match" {
+  # NOTE: check blocks produce warnings, not errors — they never block apply.
+  #       The || true was dead code making this check always pass. Removed.
+  #       Unknown locations will now trigger the warning, which is the correct
+  #       behavior — it alerts operators to verify compatibility.
   assert {
     condition = (
       (contains(["nbg1", "fsn1", "hel1"], var.location) && var.network_zone == "eu-central") ||
       (contains(["ash"], var.location) && var.network_zone == "us-east") ||
-      (contains(["hil"], var.location) && var.network_zone == "us-west") ||
-      true
-      # NOTE: The `true` fallback ensures this is a warning, not a blocker.
-      #       Hetzner may add new location/zone combinations we don't track.
+      (contains(["hil"], var.location) && var.network_zone == "us-west")
     )
     error_message = "WARNING: location '${var.location}' may not match network_zone '${var.network_zone}'. Verify they are in the same Hetzner region."
   }
@@ -62,12 +63,13 @@ check "control_plane_quorum_warning" {
 # ─── BYO SSH Key + Readiness ──────────────────────────────────────────────────
 
 check "byo_ssh_key_readiness" {
-  # NOTE: When using BYO SSH key, the module doesn't have the private key.
-  #       The readiness module needs SSH access to the initial master.
-  #       Warn the user that readiness checks may fail without the private key.
+  # NOTE: Readiness uses HTTPS polling — no SSH private key needed.
+  #       This check is informational only: with BYO SSH key, the module
+  #       won't output a private key, so operators need their own key for
+  #       any manual SSH access (debugging, maintenance).
   assert {
     condition     = var.ssh_public_key == "" || !var.create
-    error_message = "WARNING: Using a BYO SSH key (ssh_public_key is set). The readiness module requires the private key for SSH access. Readiness checks may fail unless you provide the private key via another mechanism."
+    error_message = "ADVISORY: Using a BYO SSH key (ssh_public_key is set). The module won't output a private key. Ensure you have the corresponding private key for manual SSH access if needed."
   }
 }
 
