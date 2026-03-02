@@ -121,3 +121,25 @@ run "test_name" {
 - **Code & comments**: English
 - **Commits**: English, Conventional Commits
 - **User communication**: respond in the user's language
+
+---
+
+## Reference Resources
+
+### Terraform Module Development
+
+- [HashiCorp — Module Development](https://developer.hashicorp.com/terraform/language/modules/develop) — official guide: structure, standard layout, publishing
+- [Terraform Best Practices](https://www.terraform-best-practices.com/) — community guide by Anton Babenko: naming, structure, composition
+- [terraform-skill](https://github.com/antonbabenko/terraform-skill) — Claude/AI skill for Terraform coding conventions and module design
+- [DevOpsCube — Module Best Practices](https://devopscube.com/terraform-module-best-practices/) — variable design, output conventions, testing
+
+### RKE2 & Hetzner Cloud
+
+- [RKE2 Documentation](https://docs.rke2.io/) — installation, configuration, networking, security
+- [RKE2 Server Configuration](https://docs.rke2.io/reference/server_config) — all control-plane config options
+- [RKE2 CIS Hardening](https://docs.rke2.io/security/hardening_guide) — CIS Benchmark compliance
+- [Hetzner Cloud API](https://docs.hetzner.cloud/) — servers, networks, firewalls, LBs
+- [hcloud-cloud-controller-manager](https://github.com/hetznercloud/hcloud-cloud-controller-manager) — Hetzner CCM
+- [hcloud-csi-driver](https://github.com/hetznercloud/csi-driver) — Hetzner CSI
+
+> Full reference list: see [rke2-hetzner-architecture](https://github.com/mbilan1/rke2-hetzner-architecture) README.md
