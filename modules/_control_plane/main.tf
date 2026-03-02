@@ -60,12 +60,13 @@ resource "hcloud_server" "initial" {
   firewall_ids = var.firewall_ids
 
   user_data = templatefile("${path.module}/templates/cloud-init.yaml.tftpl", {
-    hostname      = "${var.cluster_name}-${each.key}"
-    is_initial    = true
-    rke2_version  = var.rke2_version
-    rke2_config   = var.rke2_config
-    cluster_token = var.cluster_token
-    join_address  = ""
+    hostname               = "${var.cluster_name}-${each.key}"
+    is_initial             = true
+    rke2_version           = var.rke2_version
+    rke2_config            = var.rke2_config
+    cluster_token          = var.cluster_token
+    join_address           = ""
+    extra_server_manifests = var.extra_server_manifests
   })
 
   delete_protection  = var.delete_protection
@@ -120,7 +121,8 @@ resource "hcloud_server" "joining" {
     # Why: Using private IP keeps supervisor API traffic on the private network.
     #      The IP is reliably known because hcloud_server_network.initial is
     #      created before joining nodes due to the implicit dependency.
-    join_address = hcloud_server_network.initial[local.initial_master].ip
+    join_address           = hcloud_server_network.initial[local.initial_master].ip
+    extra_server_manifests = var.extra_server_manifests
   })
 
   delete_protection  = var.delete_protection

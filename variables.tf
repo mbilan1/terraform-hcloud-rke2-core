@@ -179,6 +179,13 @@ variable "rke2_config" {
   nullable    = false
 }
 
+variable "extra_server_manifests" {
+  description = "Map of filename => YAML content placed in /var/lib/rancher/rke2/server/manifests/. RKE2 HelmController auto-installs HelmChart CRDs found there. Allows consumers to deploy Helm charts (e.g. cert-manager, Rancher) without direct K8s API access from Terraform."
+  type        = map(string)
+  default     = {}
+  nullable    = false
+}
+
 # ─── OS Image ─────────────────────────────────────────────────────────────────
 
 variable "hcloud_image" {

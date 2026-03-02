@@ -98,6 +98,8 @@ module "control_plane" {
   rke2_version  = var.rke2_version
   rke2_config   = var.rke2_config
 
+  extra_server_manifests = var.extra_server_manifests
+
   delete_protection = var.delete_protection
   labels            = local.common_labels
 

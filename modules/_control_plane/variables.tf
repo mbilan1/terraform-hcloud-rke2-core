@@ -84,6 +84,13 @@ variable "rke2_config" {
   nullable    = false
 }
 
+variable "extra_server_manifests" {
+  description = "Map of filename => YAML content to place in /var/lib/rancher/rke2/server/manifests/. RKE2 HelmController installs HelmChart CRDs found there automatically."
+  type        = map(string)
+  default     = {}
+  nullable    = false
+}
+
 variable "delete_protection" {
   description = "Enable deletion and rebuild protection on servers."
   type        = bool

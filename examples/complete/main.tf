@@ -50,7 +50,7 @@ module "rke2" {
   # Security hardening
   # NOTE: BYO SSH key IDs — pass existing Hetzner SSH key IDs if you need
   #       manual server access. Default is empty (True Zero-SSH).
-  ssh_key_ids           = []
+  ssh_key_ids = []
   # NOTE: Open for testing. In production, restrict to your bastion/VPN CIDR.
   # IMPORTANT: If k8s_api_allowed_cidrs restricts access, tofu apply MUST run
   #            from within the allowed CIDR — the local-exec readiness check
