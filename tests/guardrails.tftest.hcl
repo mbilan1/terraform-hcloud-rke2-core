@@ -13,11 +13,6 @@ mock_provider "hcloud" {
       id = 12346
     }
   }
-  mock_resource "hcloud_ssh_key" {
-    defaults = {
-      id = 12347
-    }
-  }
   mock_resource "hcloud_firewall" {
     defaults = {
       id = 12348
@@ -36,7 +31,6 @@ mock_provider "hcloud" {
     }
   }
 }
-mock_provider "tls" {}
 mock_provider "random" {}
 
 # ─── BYO network with custom subnet (should warn) ────────────────────────────
@@ -70,20 +64,50 @@ run "byo_network_with_default_subnet_ok" {
   expect_failures = []
 }
 
-# ─── BYO SSH key triggers readiness warning ───────────────────────────────────
+# ─── API CIDR restrictions ────────────────────────────────────────────────────
 
-run "byo_ssh_key_readiness_warning" {
+run "restricted_api_cidrs_warns" {
+  # Restricted CIDR without delete_protection — advisory only, no deadlock.
+  command = plan
+
+  variables {
+    cluster_name          = "test-cluster"
+    delete_protection     = false
+    k8s_api_allowed_cidrs = ["192.168.1.0/24"]
+  }
+
+  expect_failures = [
+    check.restricted_api_cidrs_advisory,
+    check.delete_protection_advisory,
+  ]
+}
+
+run "restricted_api_with_delete_protection_deadlock" {
+  # Restricted CIDR + delete_protection=true — both advisory and deadlock fire.
+  command = plan
+
+  variables {
+    cluster_name          = "test-cluster"
+    delete_protection     = true
+    k8s_api_allowed_cidrs = ["192.168.1.0/24"]
+  }
+
+  expect_failures = [
+    check.restricted_api_cidrs_advisory,
+    check.api_cidr_delete_protection_deadlock,
+  ]
+}
+
+run "open_api_cidrs_no_advisory" {
+  # Default open CIDRs + delete_protection=true — no checks fire.
   command = plan
 
   variables {
     cluster_name      = "test-cluster"
-    ssh_public_key    = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample user@host"
     delete_protection = true
   }
 
-  expect_failures = [
-    check.byo_ssh_key_readiness,
-  ]
+  expect_failures = []
 }
 
 # ─── Delete protection advisory ──────────────────────────────────────────────

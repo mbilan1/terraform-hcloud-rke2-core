@@ -19,9 +19,6 @@ Root Facade (main.tf)
 ├── module.firewall (_firewall/)   — Per-role firewall rules
 │   └── BYO: existing_firewall_ids
 │
-├── module.ssh_key (_ssh_key/)     — ED25519 key pair
-│   └── BYO: ssh_public_key
-│
 ├── module.control_plane (_control_plane/)
 │   ├── hcloud_server (for_each)   — Server instances
 │   ├── hcloud_server_network      — Private network attachment
@@ -100,7 +97,7 @@ RKE2 is installed entirely via cloud-init `user_data`. No SSH-based provisioning
 ## Dependency Chain
 
 ```
-network → firewall → ssh_key → control_plane → readiness
+network → firewall → control_plane → readiness
 ```
 
 Each step depends on outputs from previous steps, wired through the facade.

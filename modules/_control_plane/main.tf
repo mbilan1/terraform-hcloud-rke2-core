@@ -66,7 +66,6 @@ resource "hcloud_server" "initial" {
     rke2_config   = var.rke2_config
     cluster_token = var.cluster_token
     join_address  = ""
-    ssh_port      = var.ssh_port
   })
 
   delete_protection  = var.delete_protection
@@ -122,7 +121,6 @@ resource "hcloud_server" "joining" {
     #      The IP is reliably known because hcloud_server_network.initial is
     #      created before joining nodes due to the implicit dependency.
     join_address = hcloud_server_network.initial[local.initial_master].ip
-    ssh_port     = var.ssh_port
   })
 
   delete_protection  = var.delete_protection

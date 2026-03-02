@@ -36,10 +36,13 @@ check "location_network_zone_match" {
   #       Unknown locations will now trigger the warning, which is the correct
   #       behavior — it alerts operators to verify compatibility.
   assert {
+    # NOTE: sin (Singapore) mapped to ap-southeast — added 2026-03-01.
+    #       Verified live via https://api.hetzner.cloud/v1/locations
     condition = (
       (contains(["nbg1", "fsn1", "hel1"], var.hcloud_location) && var.hcloud_network_zone == "eu-central") ||
       (contains(["ash"], var.hcloud_location) && var.hcloud_network_zone == "us-east") ||
-      (contains(["hil"], var.hcloud_location) && var.hcloud_network_zone == "us-west")
+      (contains(["hil"], var.hcloud_location) && var.hcloud_network_zone == "us-west") ||
+      (contains(["sin"], var.hcloud_location) && var.hcloud_network_zone == "ap-southeast")
     )
     error_message = "WARNING: hcloud_location '${var.hcloud_location}' may not match hcloud_network_zone '${var.hcloud_network_zone}'. Verify they are in the same Hetzner region."
   }
@@ -60,16 +63,39 @@ check "control_plane_quorum_warning" {
   }
 }
 
-# ─── BYO SSH Key + Readiness ──────────────────────────────────────────────────
+# ─── API Access vs Executor Reachability ──────────────────────────────────────────
 
-check "byo_ssh_key_readiness" {
-  # NOTE: Readiness uses HTTPS polling — no SSH private key needed.
-  #       This check is informational only: with BYO SSH key, the module
-  #       won't output a private key, so operators need their own key for
-  #       any manual SSH access (debugging, maintenance).
+check "restricted_api_cidrs_advisory" {
+  # NOTE: The _readiness local-exec curl runs on the machine executing
+  #       `tofu apply` — NOT on the server. If k8s_api_allowed_cidrs restricts
+  #       access to 6443, the readiness check silently hangs until timeout.
+  #       Solutions: run tofu from within the allowed CIDR range (VPN/bastion),
+  #       or use BYO firewall (existing_firewall_ids) that allows your runner.
   assert {
-    condition     = var.ssh_public_key == "" || !var.create
-    error_message = "ADVISORY: Using a BYO SSH key (ssh_public_key is set). The module won't output a private key. Ensure you have the corresponding private key for manual SSH access if needed."
+    condition = (
+      !var.create ||
+      contains(var.k8s_api_allowed_cidrs, "0.0.0.0/0") ||
+      contains(var.k8s_api_allowed_cidrs, "::/0")
+    )
+    error_message = "ADVISORY: k8s_api_allowed_cidrs is restricted to ${jsonencode(var.k8s_api_allowed_cidrs)}. The local-exec readiness check runs from the tofu executor — it must be within this CIDR to reach port 6443. Use a VPN (e.g. Tailscale) or run from a host inside the allowed range."
+  }
+}
+
+check "api_cidr_delete_protection_deadlock" {
+  # DECISION: Hard DANGER (not just advisory) for this combination.
+  # Why: This combination creates a two-way deadlock:
+  #   1. apply hangs: local-exec curl can't reach 6443 → readiness never passes
+  #   2. destroy fails: resources are delete-protected → manual unprotect via API needed
+  # The only escape is manual Hetzner API calls to remove protection before cleanup.
+  # See: docs/ARCHITECTURE.md — Operational Risks
+  assert {
+    condition = !(
+      var.create &&
+      var.delete_protection &&
+      !contains(var.k8s_api_allowed_cidrs, "0.0.0.0/0") &&
+      !contains(var.k8s_api_allowed_cidrs, "::/0")
+    )
+    error_message = "DANGER: delete_protection=true + restricted k8s_api_allowed_cidrs is a deadlock: apply will hang (readiness check cannot reach 6443 from the executor), and destroy will also fail because resources are delete-protected. Run tofu from within the allowed CIDR (e.g. via Tailscale) or use BYO firewall."
   }
 }
 

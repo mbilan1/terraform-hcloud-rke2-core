@@ -34,24 +34,6 @@ output "firewall_worker_ids" {
   value       = try(module.firewall.worker_firewall_ids, [])
 }
 
-# ─── SSH ──────────────────────────────────────────────────────────────────────
-
-output "ssh_key_id" {
-  description = "ID of the Hetzner SSH key."
-  value       = try(module.ssh_key.ssh_key_id, null)
-}
-
-output "ssh_private_key" {
-  description = "Auto-generated SSH private key in OpenSSH format (empty when BYO key is used)."
-  value       = try(module.ssh_key.private_key_openssh, "")
-  sensitive   = true
-}
-
-output "ssh_public_key" {
-  description = "SSH public key (auto-generated or BYO)."
-  value       = try(module.ssh_key.public_key_openssh, "")
-}
-
 # ─── Control Plane ────────────────────────────────────────────────────────────
 
 output "control_plane_server_ids" {

@@ -16,11 +16,6 @@ mock_provider "hcloud" {
       id = 12346
     }
   }
-  mock_resource "hcloud_ssh_key" {
-    defaults = {
-      id = 12347
-    }
-  }
   mock_resource "hcloud_firewall" {
     defaults = {
       id = 12348
@@ -39,7 +34,6 @@ mock_provider "hcloud" {
     }
   }
 }
-mock_provider "tls" {}
 mock_provider "random" {}
 
 # ─── Positive: Valid cluster names ────────────────────────────────────────────
@@ -145,48 +139,6 @@ run "invalid_hcloud_location" {
 
   expect_failures = [
     var.hcloud_location,
-  ]
-}
-
-# ─── SSH port validation ─────────────────────────────────────────────────────
-
-run "valid_ssh_port_custom" {
-  command = plan
-
-  variables {
-    cluster_name      = "test-cluster"
-    ssh_port          = 2222
-    delete_protection = true
-  }
-
-  expect_failures = []
-}
-
-run "invalid_ssh_port_zero" {
-  command = plan
-
-  variables {
-    cluster_name      = "test-cluster"
-    ssh_port          = 0
-    delete_protection = true
-  }
-
-  expect_failures = [
-    var.ssh_port,
-  ]
-}
-
-run "invalid_ssh_port_too_high" {
-  command = plan
-
-  variables {
-    cluster_name      = "test-cluster"
-    ssh_port          = 70000
-    delete_protection = true
-  }
-
-  expect_failures = [
-    var.ssh_port,
   ]
 }
 

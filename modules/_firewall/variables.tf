@@ -15,20 +15,6 @@ variable "name" {
   nullable    = false
 }
 
-variable "ssh_port" {
-  description = "SSH port number for the SSH access rule."
-  type        = number
-  default     = 22
-  nullable    = false
-}
-
-variable "ssh_allowed_cidrs" {
-  description = "CIDR blocks allowed SSH access. Empty list disables the SSH rule."
-  type        = list(string)
-  default     = ["0.0.0.0/0", "::/0"]
-  nullable    = false
-}
-
 variable "k8s_api_allowed_cidrs" {
   description = "CIDR blocks allowed to access Kubernetes API (6443) and RKE2 supervisor (9345)."
   type        = list(string)

@@ -4,7 +4,7 @@
 # This example demonstrates all module features:
 # - 3-node HA control plane
 # - 2 worker nodes with heterogeneous server types
-# - Custom SSH port
+# - BYO SSH key IDs (Zero-SSH — no key auto-generation)
 # - Restricted API access CIDRs
 # - Custom labels
 # - Deletion protection
@@ -18,28 +18,29 @@ module "rke2" {
   hcloud_network_zone = "eu-central"
 
   # HA control plane (3 nodes for etcd quorum)
+  # NOTE: cx32/cx42 retired by Hetzner 2026 — replaced with cx33/cx43 (same specs).
   control_plane_nodes = {
     "cp-0" = {
-      server_type = "cx32"
+      server_type = "cx33"
     }
     "cp-1" = {
-      server_type = "cx32"
+      server_type = "cx33"
     }
     "cp-2" = {
-      server_type = "cx32"
+      server_type = "cx33"
     }
   }
 
   # Workers with heterogeneous configs
   worker_nodes = {
     "worker-0" = {
-      server_type = "cx32"
+      server_type = "cx33"
       labels = {
         "workload" = "general"
       }
     }
     "worker-1" = {
-      server_type = "cx42"
+      server_type = "cx43"
       labels = {
         "workload" = "heavy"
       }
@@ -47,9 +48,14 @@ module "rke2" {
   }
 
   # Security hardening
-  ssh_port              = 2222
-  ssh_allowed_cidrs     = ["10.0.0.0/8"]
-  k8s_api_allowed_cidrs = ["10.0.0.0/8", "192.168.0.0/16"]
+  # NOTE: BYO SSH key IDs — pass existing Hetzner SSH key IDs if you need
+  #       manual server access. Default is empty (True Zero-SSH).
+  ssh_key_ids           = []
+  # NOTE: Open for testing. In production, restrict to your bastion/VPN CIDR.
+  # IMPORTANT: If k8s_api_allowed_cidrs restricts access, tofu apply MUST run
+  #            from within the allowed CIDR — the local-exec readiness check
+  #            (curl to 6443) runs on the machine executing tofu, not the server.
+  k8s_api_allowed_cidrs = ["0.0.0.0/0", "::/0"]
 
   # Custom network ranges
   hcloud_network_cidr = "10.100.0.0/16"

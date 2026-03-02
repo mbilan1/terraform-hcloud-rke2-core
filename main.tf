@@ -1,12 +1,18 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # FACADE — Root Module Orchestration
 #
-# DECISION: Root module is a thin facade calling 5 independent primitives.
-# Why: Each primitive (_network, _firewall, _ssh_key, _control_plane,
+# DECISION: Root module is a thin facade calling 4 independent primitives.
+# Why: Each primitive (_network, _firewall, _control_plane,
 #      _readiness) is independently usable and testable. The facade wires
 #      them together with sensible defaults, handling the dependency chain:
-#      network → firewall → ssh_key → control_plane → readiness.
-# See: docs/ARCHITECTURE.md — Module Composition
+#      network → firewall → control_plane → readiness.
+#
+# DECISION: True Zero-SSH — no SSH key management in the module.
+# Why: OpenTofu never uses SSH internally (readiness = HTTPS curl on 6443).
+#      Generating keys would create unnecessary credentials and contradict
+#      the Zero-SSH philosophy. Users pass ssh_key_ids = [] (default) or
+#      inject their own pre-existing Hetzner key IDs.
+# See: docs/ARCHITECTURE.md — Zero-SSH Design
 #
 # DECISION: Submodule names prefixed with _ to signal "internal" usage.
 # Why: Follows terraform-skill convention — underscore prefix communicates
@@ -66,24 +72,11 @@ module "firewall" {
 
   create                = var.create
   name                  = var.cluster_name
-  ssh_port              = var.ssh_port
-  ssh_allowed_cidrs     = var.ssh_allowed_cidrs
   k8s_api_allowed_cidrs = var.k8s_api_allowed_cidrs
   labels                = local.common_labels
 
   existing_control_plane_firewall_ids = try(var.existing_firewall_ids.control_plane, [])
   existing_worker_firewall_ids        = try(var.existing_firewall_ids.worker, [])
-}
-
-# ─── SSH Key ──────────────────────────────────────────────────────────────────
-
-module "ssh_key" {
-  source = "./modules/_ssh_key"
-
-  create     = var.create
-  name       = var.cluster_name
-  public_key = var.ssh_public_key
-  labels     = local.common_labels
 }
 
 # ─── Control Plane ────────────────────────────────────────────────────────────
@@ -96,13 +89,14 @@ module "control_plane" {
   nodes           = var.control_plane_nodes
   hcloud_location = var.hcloud_location
   hcloud_image    = var.hcloud_image
-  ssh_key_ids     = compact([module.ssh_key.ssh_key_id])
-  firewall_ids    = module.firewall.control_plane_firewall_ids
-  network_id      = module.network.network_id
-  cluster_token   = try(random_password.cluster_token["this"].result, "")
-  rke2_version    = var.rke2_version
-  rke2_config     = var.rke2_config
-  ssh_port        = var.ssh_port
+  # DECISION: BYO SSH keys passed directly — no auto-generation.
+  # Why: True Zero-SSH. User provides [] (default) or existing Hetzner key IDs.
+  ssh_key_ids   = var.ssh_key_ids
+  firewall_ids  = module.firewall.control_plane_firewall_ids
+  network_id    = module.network.network_id
+  cluster_token = try(random_password.cluster_token["this"].result, "")
+  rke2_version  = var.rke2_version
+  rke2_config   = var.rke2_config
 
   delete_protection = var.delete_protection
   labels            = local.common_labels

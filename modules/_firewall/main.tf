@@ -24,19 +24,11 @@ resource "hcloud_firewall" "control_plane" {
 
   name = "${var.name}-cp-fw"
 
-  # DECISION: SSH access is configurable but defaults to open.
-  # Why: Development convenience. Production users should override
-  #      ssh_allowed_cidrs to restrict access to bastion/VPN ranges.
-  dynamic "rule" {
-    for_each = length(var.ssh_allowed_cidrs) > 0 ? [1] : []
-    content {
-      description = "SSH access"
-      direction   = "in"
-      protocol    = "tcp"
-      port        = tostring(var.ssh_port)
-      source_ips  = var.ssh_allowed_cidrs
-    }
-  }
+  # DECISION: No SSH rule — True Zero-SSH by default.
+  # Why: The module never uses SSH internally (readiness = HTTPS on 6443).
+  #      Opening port 22 by default would violate least-privilege.
+  #      Users who need SSH access use BYO firewall (existing_firewall_ids).
+  # See: docs/ARCHITECTURE.md — Zero-SSH Design
 
   # Kubernetes API server
   rule {
@@ -74,17 +66,7 @@ resource "hcloud_firewall" "worker" {
 
   name = "${var.name}-worker-fw"
 
-  # SSH access (same CIDR restrictions as control plane)
-  dynamic "rule" {
-    for_each = length(var.ssh_allowed_cidrs) > 0 ? [1] : []
-    content {
-      description = "SSH access"
-      direction   = "in"
-      protocol    = "tcp"
-      port        = tostring(var.ssh_port)
-      source_ips  = var.ssh_allowed_cidrs
-    }
-  }
+  # NOTE: No SSH rule — Zero-SSH design. See control plane firewall comment.
 
   # HTTP ingress
   rule {

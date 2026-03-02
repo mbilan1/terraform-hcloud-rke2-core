@@ -27,14 +27,6 @@ write_files:
       ${indent(6, rke2_config)}
 %{ endif ~}
 
-  # SSH port configuration
-%{ if ssh_port != 22 ~}
-  - path: /etc/ssh/sshd_config.d/custom-port.conf
-    permissions: "0644"
-    content: |
-      Port ${ssh_port}
-%{ endif ~}
-
 runcmd:
   # DECISION: Wait for cloud-init networking to stabilize before install.
   # Why: Hetzner Cloud sometimes has a brief delay before the network interface
@@ -61,7 +53,3 @@ runcmd:
   - echo 'export PATH=$PATH:/var/lib/rancher/rke2/bin' >> /etc/profile.d/rke2.sh
   - echo 'export KUBECONFIG=/etc/rancher/rke2/rke2.yaml' >> /etc/profile.d/rke2.sh
 
-%{ if ssh_port != 22 ~}
-  # Restart SSH with new port
-  - systemctl restart sshd
-%{ endif ~}

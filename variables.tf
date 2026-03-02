@@ -43,8 +43,10 @@ variable "hcloud_location" {
   nullable    = false
 
   validation {
-    condition     = contains(["nbg1", "fsn1", "hel1", "ash", "hil"], var.hcloud_location)
-    error_message = "Must be a valid Hetzner Cloud location: nbg1, fsn1, hel1, ash, hil."
+    # NOTE: sin (Singapore, ap-southeast) added 2026-03-01 — verified live via
+    #       Hetzner API: https://api.hetzner.cloud/v1/locations
+    condition     = contains(["nbg1", "fsn1", "hel1", "ash", "hil", "sin"], var.hcloud_location)
+    error_message = "Must be a valid Hetzner Cloud location: nbg1, fsn1, hel1, ash, hil, sin."
   }
 }
 
@@ -84,25 +86,6 @@ variable "existing_network_id" {
 
 # ─── Firewall Configuration ──────────────────────────────────────────────────
 
-variable "ssh_port" {
-  description = "SSH port for node access. Used in firewall rules."
-  type        = number
-  default     = 22
-  nullable    = false
-
-  validation {
-    condition     = var.ssh_port >= 1 && var.ssh_port <= 65535
-    error_message = "SSH port must be between 1 and 65535."
-  }
-}
-
-variable "ssh_allowed_cidrs" {
-  description = "List of CIDR blocks allowed to SSH into nodes. Empty list disables SSH access via firewall."
-  type        = list(string)
-  default     = ["0.0.0.0/0", "::/0"]
-  nullable    = false
-}
-
 variable "k8s_api_allowed_cidrs" {
   description = "List of CIDR blocks allowed to access the Kubernetes API (port 6443)."
   type        = list(string)
@@ -119,12 +102,18 @@ variable "existing_firewall_ids" {
   default = null
 }
 
-# ─── SSH Key ──────────────────────────────────────────────────────────────────
+# ─── SSH Key (BYO) ───────────────────────────────────────────────────────────
 
-variable "ssh_public_key" {
-  description = "SSH public key for node access. When empty, a new ED25519 key pair is auto-generated."
-  type        = string
-  default     = ""
+# DECISION: True Zero-SSH — no key auto-generation.
+# Why: OpenTofu never uses SSH internally (readiness = HTTPS curl on 6443).
+#      Auto-generating keys contradicts the Zero-SSH philosophy and creates
+#      unnecessary credentials. Users who need SSH access bring their own
+#      pre-existing Hetzner SSH key IDs.
+# See: docs/ARCHITECTURE.md — Zero-SSH Design
+variable "ssh_key_ids" {
+  description = "List of existing Hetzner SSH key IDs to inject into nodes. Default empty = True Zero-SSH. BYO: pass your pre-created key IDs."
+  type        = list(number)
+  default     = []
   nullable    = false
 }
 
@@ -133,13 +122,20 @@ variable "ssh_public_key" {
 variable "control_plane_nodes" {
   description = "Map of control plane node definitions. Keys are node identifiers, values configure each server."
   type = map(object({
-    server_type = optional(string, "cx22")
+    # NOTE: cx22 retired by Hetzner 2026 — replaced with cx23 (same specs).
+    server_type = optional(string, "cx23")
     location    = optional(string)
     labels      = optional(map(string), {})
     backups     = optional(bool, false)
   }))
+  # DECISION: Default is 3-node HA cluster, not single-node.
+  # Why: Single-node clusters are dev-only; production operators should never
+  #      accidentally deploy a non-HA cluster. Explicit override required for
+  #      single-node (e.g. examples/minimal).
   default = {
     "cp-0" = {}
+    "cp-1" = {}
+    "cp-2" = {}
   }
   nullable = false
 
@@ -157,7 +153,8 @@ variable "control_plane_nodes" {
 variable "worker_nodes" {
   description = "Map of worker node definitions. Keys are node identifiers. Empty map means no workers."
   type = map(object({
-    server_type = optional(string, "cx22")
+    # NOTE: cx22 retired by Hetzner 2026 — replaced with cx23 (same specs).
+    server_type = optional(string, "cx23")
     location    = optional(string)
     labels      = optional(map(string), {})
     backups     = optional(bool, false)

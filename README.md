@@ -22,7 +22,7 @@ module "rke2" {
   location     = "nbg1"
 
   control_plane_nodes = {
-    "cp-0" = { server_type = "cx22" }
+    "cp-0" = { server_type = "cx23" }
   }
 }
 ```
@@ -35,7 +35,6 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full design rationale.
 Root Facade
 ├── modules/_network/        # VPC + subnet (BYO support)
 ├── modules/_firewall/       # Per-role firewalls (BYO support)
-├── modules/_ssh_key/        # ED25519 key pair (BYO support)
 ├── modules/_control_plane/  # Servers with cloud-init RKE2 bootstrap
 └── modules/_readiness/      # API health check + kubeconfig retrieval
 ```
@@ -46,7 +45,6 @@ Root Facade
 |------|---------|
 | OpenTofu | >= 1.8.0 |
 | hcloud provider | ~> 1.49 |
-| tls provider | ~> 4.0 |
 | random provider | ~> 3.6 |
 
 ## Examples

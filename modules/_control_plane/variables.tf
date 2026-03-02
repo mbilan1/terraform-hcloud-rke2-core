@@ -18,7 +18,11 @@ variable "cluster_name" {
 variable "nodes" {
   description = "Map of control plane node definitions."
   type = map(object({
-    server_type = optional(string, "cx22")
+    # NOTE: cx22 was retired by Hetzner in early 2026 and is no longer available
+    #       for new server creation. cx23 is the direct replacement (same specs:
+    #       2 vCPU, 4 GB RAM, 40 GB SSD). Verified via live API 2026-03-01.
+    # See: https://docs.hetzner.cloud/ — Server Types
+    server_type = optional(string, "cx23")
     location    = optional(string)
     labels      = optional(map(string), {})
     backups     = optional(bool, false)
@@ -77,13 +81,6 @@ variable "rke2_config" {
   description = "Additional RKE2 config.yaml content."
   type        = string
   default     = ""
-  nullable    = false
-}
-
-variable "ssh_port" {
-  description = "SSH port for cloud-init configuration."
-  type        = number
-  default     = 22
   nullable    = false
 }
 
