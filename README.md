@@ -4,8 +4,9 @@ OpenTofu module to deploy a production-oriented **RKE2 Kubernetes cluster on Het
 
 ## Features
 
-- **Composable primitives**: 5 independent submodules (network, firewall, SSH key, control plane, readiness)
-- **BYO resources**: Bring your own network, firewall, or SSH key
+- **Composable primitives**: 3 independent submodules (network, control plane, readiness)
+- **BYO resources**: Bring your own network or firewall
+- **BYO Firewall**: Pass pre-existing Hetzner firewall IDs (no embedded rules)
 - **HA control plane**: 1, 3, or 5 node configurations with etcd quorum validation
 - **`for_each` node identity**: Stable node addressing via map keys (no count drift)
 - **Flat variable API**: Simple overrides, clear plan diffs
@@ -16,7 +17,7 @@ OpenTofu module to deploy a production-oriented **RKE2 Kubernetes cluster on Het
 
 ```hcl
 module "rke2" {
-  source  = "astract/rke2-core/hcloud"
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git"
 
   cluster_name = "my-cluster"
   location     = "nbg1"
@@ -34,9 +35,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full design rationale.
 ```
 Root Facade
 ├── modules/_network/        # VPC + subnet (BYO support)
-├── modules/_firewall/       # Per-role firewalls (BYO support)
 ├── modules/_control_plane/  # Servers with cloud-init RKE2 bootstrap
-└── modules/_readiness/      # API health check + kubeconfig retrieval
+└── modules/_readiness/      # API health check
 ```
 
 ## Requirements

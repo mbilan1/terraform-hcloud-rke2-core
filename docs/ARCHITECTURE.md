@@ -2,7 +2,7 @@
 
 ## Overview
 
-`terraform-hcloud-rke2-core` deploys an RKE2 Kubernetes cluster on Hetzner Cloud using a **composable primitive** architecture. The root module is a thin facade that orchestrates 5 independent submodules.
+`terraform-hcloud-rke2-core` deploys an RKE2 Kubernetes cluster on Hetzner Cloud using a **composable primitive** architecture. The root module is a thin facade that orchestrates 3 independent submodules.
 
 This module operates at **L3 (infrastructure) only** with a **zero-SSH design** — no SSH provisioners, no remote-exec. All node configuration happens via cloud-init at boot time, and cluster readiness is verified via HTTPS polling against the Kubernetes API server.
 
@@ -15,9 +15,6 @@ Root Facade (main.tf)
 │
 ├── module.network (_network/)     — Private network + subnet
 │   └── BYO: existing_network_id
-│
-├── module.firewall (_firewall/)   — Per-role firewall rules
-│   └── BYO: existing_firewall_ids
 │
 ├── module.control_plane (_control_plane/)
 │   ├── hcloud_server (for_each)   — Server instances
@@ -50,7 +47,7 @@ Each submodule is independently usable. The facade wires them together but advan
 ```hcl
 # Use only the network primitive
 module "network" {
-  source = "astract/rke2-core/hcloud//modules/_network"
+  source = "git::https://github.com/mbilan1/terraform-hcloud-rke2-core.git//modules/_network"
   name   = "my-network"
 }
 ```
@@ -62,8 +59,7 @@ Production teams often have pre-existing infrastructure. Each primitive supports
 | Primitive | BYO Variable | Effect |
 |-----------|-------------|--------|
 | Network | `existing_network_id` | Skips network creation |
-| Firewall | `existing_firewall_ids` | Skips role-specific FW creation |
-| SSH Key | `ssh_public_key` | Uploads provided key, skips generation |
+| Firewall | `firewall_ids` | Attaches pre-existing Hetzner firewall IDs to all nodes (no embedded rules — ADR-006) |
 
 ### for_each over count
 
@@ -74,15 +70,14 @@ Nodes are defined as `map(object)` and iterated with `for_each`. This ensures:
 
 ### Provider Strategy
 
-v2 uses 3 providers (down from 6 in v1):
+v2 uses 2 providers (down from 6 in v1):
 
 | Provider | Purpose | Why kept |
 |----------|---------|----------|
 | hcloud | All Hetzner Cloud resources | Core dependency |
-| tls | SSH key generation | Auto-generate ED25519 keys |
 | random | Cluster token generation | Cryptographic random password |
 
-Removed: `cloudinit` (templatefile replaces it), `external` (no SSH polling), `local` (no local file generation).
+Removed: `cloudinit` (templatefile replaces it), `external` (no SSH polling), `local` (no local file generation), `tls` (true zero-SSH — no key generation).
 
 ### Pure L3 — No Kubernetes Providers
 
@@ -97,7 +92,7 @@ RKE2 is installed entirely via cloud-init `user_data`. No SSH-based provisioning
 ## Dependency Chain
 
 ```
-network → firewall → control_plane → readiness
+network → control_plane → readiness
 ```
 
 Each step depends on outputs from previous steps, wired through the facade.
@@ -111,9 +106,7 @@ Each step depends on outputs from previous steps, wired through the facade.
 
 ## Security Model
 
-- **Firewall per role**: Control plane and workers have separate security profiles
-- **Configurable CIDRs**: SSH and API access restricted by CIDR lists
-- **SSH port customization**: Non-standard port reduces scanner noise
+- **BYO Firewall**: Consumers create Hetzner firewalls externally and pass IDs via `firewall_ids` (ADR-006)
 - **Deletion protection**: Optional but recommended for production
 - **Sensitive outputs**: Private keys and tokens marked `sensitive = true`
 - **No secrets in state**: Cluster token is generated, not user-supplied

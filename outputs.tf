@@ -22,18 +22,6 @@ output "network_subnet_id" {
   value       = try(module.network.subnet_id, null)
 }
 
-# ─── Firewall ─────────────────────────────────────────────────────────────────
-
-output "firewall_control_plane_ids" {
-  description = "Firewall IDs attached to control plane nodes."
-  value       = try(module.firewall.control_plane_firewall_ids, [])
-}
-
-output "firewall_worker_ids" {
-  description = "Firewall IDs attached to worker nodes."
-  value       = try(module.firewall.worker_firewall_ids, [])
-}
-
 # ─── Control Plane ────────────────────────────────────────────────────────────
 
 output "control_plane_server_ids" {

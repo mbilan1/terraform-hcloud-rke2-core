@@ -84,22 +84,18 @@ variable "existing_network_id" {
   default     = null
 }
 
-# ─── Firewall Configuration ──────────────────────────────────────────────────
+# ─── Firewall (BYO) ──────────────────────────────────────────────────────────
 
-variable "k8s_api_allowed_cidrs" {
-  description = "List of CIDR blocks allowed to access the Kubernetes API (port 6443)."
-  type        = list(string)
-  default     = ["0.0.0.0/0", "::/0"]
+# DECISION: BYO Firewall — no firewall creation in the module.
+# Why: Hetzner firewalls are account-level singletons, not per-cluster.
+#      Embedding firewall rules couples the module to a specific security
+#      policy. Consumers create firewalls externally and pass IDs.
+# See: ADR-006 in rke2-hetzner-architecture
+variable "firewall_ids" {
+  description = "List of Hetzner firewall IDs to attach to all nodes. BYO: create firewalls externally and pass their IDs."
+  type        = list(number)
+  default     = []
   nullable    = false
-}
-
-variable "existing_firewall_ids" {
-  description = "Map of existing firewall IDs per role. When set for a role, firewall creation is skipped for that role (BYO firewall)."
-  type = object({
-    control_plane = optional(list(number), [])
-    worker        = optional(list(number), [])
-  })
-  default = null
 }
 
 # ─── SSH Key (BYO) ───────────────────────────────────────────────────────────

@@ -1,11 +1,17 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # FACADE — Root Module Orchestration
 #
-# DECISION: Root module is a thin facade calling 4 independent primitives.
-# Why: Each primitive (_network, _firewall, _control_plane,
-#      _readiness) is independently usable and testable. The facade wires
-#      them together with sensible defaults, handling the dependency chain:
-#      network → firewall → control_plane → readiness.
+# DECISION: Root module is a thin facade calling 3 independent primitives.
+# Why: Each primitive (_network, _control_plane, _readiness) is independently
+#      usable and testable. The facade wires them together with sensible
+#      defaults, handling the dependency chain:
+#      network → control_plane → readiness.
+#
+# DECISION: BYO Firewall — no firewall management in the module.
+# Why: Hetzner firewalls are account-level singletons, not per-cluster.
+#      Embedding firewall rules couples the module to a specific security
+#      policy. Consumers create firewalls externally and pass IDs via
+#      var.firewall_ids. See: ADR-006 in rke2-hetzner-architecture.
 #
 # DECISION: True Zero-SSH — no SSH key management in the module.
 # Why: OpenTofu never uses SSH internally (readiness = HTTPS curl on 6443).
@@ -65,20 +71,6 @@ module "network" {
   labels              = local.common_labels
 }
 
-# ─── Firewall ─────────────────────────────────────────────────────────────────
-
-module "firewall" {
-  source = "./modules/_firewall"
-
-  create                = var.create
-  name                  = var.cluster_name
-  k8s_api_allowed_cidrs = var.k8s_api_allowed_cidrs
-  labels                = local.common_labels
-
-  existing_control_plane_firewall_ids = try(var.existing_firewall_ids.control_plane, [])
-  existing_worker_firewall_ids        = try(var.existing_firewall_ids.worker, [])
-}
-
 # ─── Control Plane ────────────────────────────────────────────────────────────
 
 module "control_plane" {
@@ -92,7 +84,7 @@ module "control_plane" {
   # DECISION: BYO SSH keys passed directly — no auto-generation.
   # Why: True Zero-SSH. User provides [] (default) or existing Hetzner key IDs.
   ssh_key_ids   = var.ssh_key_ids
-  firewall_ids  = module.firewall.control_plane_firewall_ids
+  firewall_ids  = var.firewall_ids
   network_id    = module.network.network_id
   cluster_token = try(random_password.cluster_token["this"].result, "")
   rke2_version  = var.rke2_version
@@ -103,10 +95,7 @@ module "control_plane" {
   delete_protection = var.delete_protection
   labels            = local.common_labels
 
-  depends_on = [
-    module.network,
-    module.firewall,
-  ]
+  depends_on = [module.network]
 }
 
 # ─── Readiness ────────────────────────────────────────────────────────────────

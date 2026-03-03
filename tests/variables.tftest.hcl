@@ -16,11 +16,6 @@ mock_provider "hcloud" {
       id = 12346
     }
   }
-  mock_resource "hcloud_firewall" {
-    defaults = {
-      id = 12348
-    }
-  }
   mock_resource "hcloud_server" {
     defaults = {
       id           = 12349

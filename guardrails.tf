@@ -63,42 +63,6 @@ check "control_plane_quorum_warning" {
   }
 }
 
-# ─── API Access vs Executor Reachability ──────────────────────────────────────────
-
-check "restricted_api_cidrs_advisory" {
-  # NOTE: The _readiness local-exec curl runs on the machine executing
-  #       `tofu apply` — NOT on the server. If k8s_api_allowed_cidrs restricts
-  #       access to 6443, the readiness check silently hangs until timeout.
-  #       Solutions: run tofu from within the allowed CIDR range (VPN/bastion),
-  #       or use BYO firewall (existing_firewall_ids) that allows your runner.
-  assert {
-    condition = (
-      !var.create ||
-      contains(var.k8s_api_allowed_cidrs, "0.0.0.0/0") ||
-      contains(var.k8s_api_allowed_cidrs, "::/0")
-    )
-    error_message = "ADVISORY: k8s_api_allowed_cidrs is restricted to ${jsonencode(var.k8s_api_allowed_cidrs)}. The local-exec readiness check runs from the tofu executor — it must be within this CIDR to reach port 6443. Use a VPN (e.g. Tailscale) or run from a host inside the allowed range."
-  }
-}
-
-check "api_cidr_delete_protection_deadlock" {
-  # DECISION: Hard DANGER (not just advisory) for this combination.
-  # Why: This combination creates a two-way deadlock:
-  #   1. apply hangs: local-exec curl can't reach 6443 → readiness never passes
-  #   2. destroy fails: resources are delete-protected → manual unprotect via API needed
-  # The only escape is manual Hetzner API calls to remove protection before cleanup.
-  # See: docs/ARCHITECTURE.md — Operational Risks
-  assert {
-    condition = !(
-      var.create &&
-      var.delete_protection &&
-      !contains(var.k8s_api_allowed_cidrs, "0.0.0.0/0") &&
-      !contains(var.k8s_api_allowed_cidrs, "::/0")
-    )
-    error_message = "DANGER: delete_protection=true + restricted k8s_api_allowed_cidrs is a deadlock: apply will hang (readiness check cannot reach 6443 from the executor), and destroy will also fail because resources are delete-protected. Run tofu from within the allowed CIDR (e.g. via Tailscale) or use BYO firewall."
-  }
-}
-
 # ─── Deletion Protection Consistency ──────────────────────────────────────────
 
 check "delete_protection_advisory" {

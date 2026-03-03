@@ -52,11 +52,6 @@ module "rke2" {
   #       manual server access. Default is empty (True Zero-SSH).
   ssh_key_ids = []
   # NOTE: Open for testing. In production, restrict to your bastion/VPN CIDR.
-  # IMPORTANT: If k8s_api_allowed_cidrs restricts access, tofu apply MUST run
-  #            from within the allowed CIDR — the local-exec readiness check
-  #            (curl to 6443) runs on the machine executing tofu, not the server.
-  k8s_api_allowed_cidrs = ["0.0.0.0/0", "::/0"]
-
   # Custom network ranges
   hcloud_network_cidr = "10.100.0.0/16"
   subnet_address      = "10.100.1.0/24"
