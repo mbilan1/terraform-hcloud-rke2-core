@@ -146,19 +146,6 @@ variable "control_plane_nodes" {
   }
 }
 
-variable "worker_nodes" {
-  description = "Map of worker node definitions. Keys are node identifiers. Empty map means no workers."
-  type = map(object({
-    # NOTE: cx22 retired by Hetzner 2026 — replaced with cx23 (same specs).
-    server_type = optional(string, "cx23")
-    location    = optional(string)
-    labels      = optional(map(string), {})
-    backups     = optional(bool, false)
-  }))
-  default  = {}
-  nullable = false
-}
-
 # ─── RKE2 Configuration ──────────────────────────────────────────────────────
 
 variable "rke2_version" {

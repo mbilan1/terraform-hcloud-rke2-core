@@ -1,11 +1,9 @@
 # ──────────────────────────────────────────────────────────────────────────────
-# Complete Example — HA Cluster with Workers & Custom Configuration
+# Complete Example — HA Cluster with Custom Configuration
 #
 # This example demonstrates all module features:
 # - 3-node HA control plane
-# - 2 worker nodes with heterogeneous server types
 # - BYO SSH key IDs (Zero-SSH — no key auto-generation)
-# - Restricted API access CIDRs
 # - Custom labels
 # - Deletion protection
 # ──────────────────────────────────────────────────────────────────────────────
@@ -28,22 +26,6 @@ module "rke2" {
     }
     "cp-2" = {
       server_type = "cx33"
-    }
-  }
-
-  # Workers with heterogeneous configs
-  worker_nodes = {
-    "worker-0" = {
-      server_type = "cx33"
-      labels = {
-        "workload" = "general"
-      }
-    }
-    "worker-1" = {
-      server_type = "cx43"
-      labels = {
-        "workload" = "heavy"
-      }
     }
   }
 

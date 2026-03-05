@@ -89,9 +89,8 @@ run "test_name" {
 
 1. **SSH** — True Zero-SSH (ADR-002). No SSH keys, no port 22, no sshd. BYO only via `ssh_key_ids`
 2. **Load balancers** — NOT in this module. Consumer creates them (ADR-003)
-3. **Worker nodes** — `worker_nodes` var exists for future use, but workers are via Rancher CAS
-4. **`tls` provider** — removed. Don't re-add
-5. **cloud-init templates** — in `modules/_control_plane/templates/`. Edit carefully — they bootstrap RKE2
+3. **`tls` provider** — removed. Don't re-add
+4. **cloud-init templates** — in `modules/_control_plane/templates/`. Edit carefully — they bootstrap RKE2
 
 ---
 

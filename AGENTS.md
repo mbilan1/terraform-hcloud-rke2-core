@@ -40,7 +40,7 @@ An **OpenTofu/Terraform module** (NOT a root deployment) that provisions **L3 in
 | Kubernetes addons (HCCM, CSI, cert-manager) | `terraform-hcloud-rancher` or Helmfile |
 | Kubeconfig retrieval | `terraform-hcloud-rancher` (Rancher API) |
 | SSH key generation | Removed — True Zero-SSH. Use `ssh_key_ids` for BYO |
-| Worker nodes | Map exists but unused — workers via Rancher CAS |
+| Worker nodes | Out of scope — workers via Rancher CAS |
 | DNS | Operator's responsibility |
 
 ---
@@ -231,8 +231,7 @@ Scope: `network`, `firewall`, `control-plane`, `readiness`, `examples`, `provide
 4. **`terraform.tfstate` should NEVER be committed**
 5. **Questions ≠ change requests** — answer questions with evidence, don't edit code unless explicitly asked
 6. **SSH was deliberately removed** — don't re-add SSH-related variables, firewall rules, or cloud-init blocks
-7. **`worker_nodes` variable exists but is unused** — workers are provisioned via Rancher CAS, not this module
-8. **Training data is stale** — always verify server types, locations, and provider versions via live API
+7. **Training data is stale** — always verify server types, locations, and provider versions via live API
 
 ---
 
