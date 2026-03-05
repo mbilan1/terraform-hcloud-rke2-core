@@ -18,3 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cross-variable guardrails via `check {}` blocks
 - 19 unit tests with `mock_provider` (zero credentials, ~3s)
 - Pre-commit hooks (fmt, validate, tflint, terraform-docs, conventional-commits)
+
+### Changed
+
+- **RKE2 default**: Bumped to v1.34.4+rke2r1
+- **Readiness timeout**: Reduced to 6m (Packer baked images boot faster)
+
+### Removed
+
+- Dead `worker_nodes` variable (workers out of scope — ADR)
