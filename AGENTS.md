@@ -11,10 +11,10 @@
 **Before making ANY change**, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) in full.
 
 It contains:
-- Composable primitive architecture (facade + 4 submodules)
+- Composable primitive architecture (facade + 3 submodules)
 - Zero-SSH design philosophy
 - BYO resource pattern
-- Dependency chain (network → firewall → control_plane → readiness)
+- Dependency chain (network → control_plane → readiness)
 - Provider strategy (2 providers only)
 - Compromise Log
 
@@ -28,7 +28,7 @@ An **OpenTofu/Terraform module** (NOT a root deployment) that provisions **L3 in
 
 - **IaC tool**: OpenTofu >= 1.8.0 — always use `tofu`, **never** `terraform`
 - **Cloud provider**: Hetzner Cloud
-- **Layer**: L3 only — servers, network, firewall, load balancer, readiness
+- **Layer**: L3 only — servers, network, readiness
 - **OS**: Ubuntu 24.04 LTS
 - **Design**: Zero-SSH, composable primitives, BYO resources
 - **Status**: Active development
@@ -63,7 +63,7 @@ An **OpenTofu/Terraform module** (NOT a root deployment) that provisions **L3 in
 1. **Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** before any structural change
 2. **Run `tofu validate`** after any `.tf` file change
 3. **Run `tofu fmt -check`** to verify formatting
-4. **Run `tofu test`** after changes to variables, guardrails, or conditional logic (22 tests, ~3s, $0)
+4. **Run `tofu test`** after changes to variables, guardrails, or conditional logic (19 tests, ~3s, $0)
 5. **Preserve existing code comments** — they document deliberate compromises
 6. **Read the relevant file before editing**
 7. **Verify external claims via network** before suggesting changes
@@ -110,7 +110,7 @@ When comparing options, present **facts-first in a table** BEFORE conclusions. R
 
 | File | Purpose |
 |------|---------|
-| `main.tf` | Facade — wires 4 primitives: network → firewall → control_plane → readiness |
+| `main.tf` | Facade — wires 3 primitives: network → control_plane → readiness |
 | `variables.tf` | All user-facing input variables with validations |
 | `outputs.tf` | Module outputs (IPs, network ID, cluster token) |
 | `guardrails.tf` | Preflight `check {}` blocks (location/zone, CIDR safety) |
@@ -121,11 +121,12 @@ When comparing options, present **facts-first in a table** BEFORE conclusions. R
 | Module | Purpose | BYO Variable |
 |--------|---------|---|
 | `modules/_network/` | Hetzner private network + subnet | `existing_network_id` |
-| `modules/_firewall/` | Per-role firewall rules (CP + worker) | `existing_firewall_ids` |
 | `modules/_control_plane/` | Servers + cloud-init + network attachment | — |
 | `modules/_readiness/` | HTTPS polling on port 6443 | — |
 
 **Underscore prefix** (`_`) signals "internal" — consumers use the root facade.
+
+> **Firewall**: Removed from module per ADR-006 (BYO Firewall). Consumers pass `firewall_ids` directly.
 
 ### Other Directories
 
@@ -134,15 +135,15 @@ When comparing options, present **facts-first in a table** BEFORE conclusions. R
 | `docs/ARCHITECTURE.md` | Full architecture documentation — **READ FIRST** |
 | `examples/minimal/` | 1-node dev cluster example |
 | `examples/complete/` | 3-node HA cluster with all knobs |
-| `tests/` | Unit tests (22 tests, mock_provider, ~3s) |
+| `tests/` | Unit tests (19 tests, mock_provider, ~3s) |
 
 ### Test Files
 
 | File | Tests | Scope |
 |------|:-----:|-------|
 | `variables.tftest.hcl` | 13 | Variable `validation {}` blocks |
-| `guardrails.tftest.hcl` | 9 | Cross-variable `check {}` blocks |
-| **Total** | **22** | All mock_provider, ~3s, $0 |
+| `guardrails.tftest.hcl` | 6 | Cross-variable `check {}` blocks |
+| **Total** | **19** | All mock_provider, ~3s, $0 |
 
 ---
 
@@ -159,7 +160,12 @@ When comparing options, present **facts-first in a table** BEFORE conclusions. R
 - Each submodule has `create` boolean for `for_each` gating
 - BYO resources via `existing_*` variables (skip creation, use provided IDs)
 - `for_each` over `count` — stable identity, heterogeneous configs
-- Root facade wires: `network → firewall → control_plane → readiness`
+- Root facade wires: `network → control_plane → readiness`
+
+### BYO Firewall (ADR-006)
+- Firewalls are NOT managed by this module
+- Consumers create Hetzner firewalls externally and pass IDs via `firewall_ids`
+- Why: Hetzner firewalls are account-level singletons with per-server attachment
 
 ### Dual Load Balancer (ADR-003)
 - This module does NOT create load balancers
@@ -244,6 +250,5 @@ Full architectural context is maintained in a separate repository:
 | Repo | Purpose |
 |---|---|
 | `terraform-hcloud-rancher` | Management cluster that USES this module as L3 base |
-| `terraform-hcloud-rke2` | v1 module (predecessor, still used by rancher module) |
 | `rke2-hetzner-architecture` | Architecture decisions + investigation reports |
-| `rancher-hetzner-cluster-templates` | Downstream cluster Helm templates (planned) |
+| `rancher-hetzner-cluster-templates` | Downstream cluster Helm templates |

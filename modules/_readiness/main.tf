@@ -30,26 +30,26 @@ resource "terraform_data" "wait_for_api" {
   triggers_replace = [var.initial_master_ipv4]
 
   provisioner "local-exec" {
-    # DECISION: Poll for up to 6 minutes (36 attempts × 10s).
-    # Why: With baked Golden Images, RKE2 starts in under 2 minutes.
-    #      6 minutes provides margin for cold-start on stock images.
+    # DECISION: Poll for up to 10 minutes (60 attempts × 10s).
+    # Why: RKE2 takes 3-6 minutes to bootstrap on a fresh node. The 10-minute
+    #      window provides generous margin for slow network or server types.
     #
     # NOTE: curl -k is used because the RKE2 API server uses a self-signed
     #       certificate at bootstrap. The purpose is reachability check,
     #       not certificate validation.
     command = <<-EOT
       echo "Waiting for RKE2 API server at ${var.initial_master_ipv4}:6443..."
-      for i in $(seq 1 36); do
+      for i in $(seq 1 60); do
         if curl -sk --connect-timeout 5 \
           "https://${var.initial_master_ipv4}:6443/readyz" \
           -o /dev/null -w "%%{http_code}" 2>/dev/null | grep -qE "^(200|401|403)$"; then
           echo "API server is reachable after $((i * 10)) seconds"
           exit 0
         fi
-        echo "Attempt $i/36: API server not reachable, waiting 10s..."
+        echo "Attempt $i/60: API server not reachable, waiting 10s..."
         sleep 10
       done
-      echo "ERROR: API server at ${var.initial_master_ipv4}:6443 did not become reachable within 6 minutes"
+      echo "ERROR: API server at ${var.initial_master_ipv4}:6443 did not become reachable within 10 minutes"
       exit 1
     EOT
   }

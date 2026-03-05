@@ -10,11 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Initial module implementation with composable primitive architecture
-- 4 submodules: `_network`, `_firewall`, `_control_plane`, `_readiness`
+- 3 submodules: `_network`, `_control_plane`, `_readiness`
 - BYO (Bring Your Own) support for network and firewall
 - BYO SSH key injection via `ssh_key_ids` (True Zero-SSH by default)
 - HA control plane with `for_each`-based node identity
 - Zero-SSH design — readiness via HTTPS polling, no remote-exec, no key generation
 - Cross-variable guardrails via `check {}` blocks
-- 23 unit tests with `mock_provider` (zero credentials, ~3s)
+- 19 unit tests with `mock_provider` (zero credentials, ~3s)
 - Pre-commit hooks (fmt, validate, tflint, terraform-docs, conventional-commits)

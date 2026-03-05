@@ -7,7 +7,7 @@
 
 ## Quick Reference
 
-- **22 tests**, mock_provider, ~3s, $0: `tofu test`
+- **19 tests**, mock_provider, ~3s, $0: `tofu test`
 - **Validate**: `tofu validate` (safe, always run after edits)
 - **Format**: `tofu fmt` (safe, auto-fix)
 - **NEVER**: `tofu plan` in root, `tofu apply`, `tofu destroy`, `tofu init -upgrade`
@@ -18,7 +18,7 @@
 
 Platform-wide decisions are documented in a separate repository:
 - **Repo**: [rke2-hetzner-architecture](https://github.com/mbilan1/rke2-hetzner-architecture)
-- Contains: ADRs (5), investigation reports (3), design documents (2)
+- Contains: ADRs (6), investigation reports (3), design documents (2)
 - Key ADRs: True Zero-SSH (002), Dual LB (003), Shared Network (005)
 
 ---
@@ -28,7 +28,6 @@ Platform-wide decisions are documented in a separate repository:
 ```
 Root facade (main.tf)
   ├── modules/_network/    → hcloud_network + hcloud_network_subnet
-  ├── modules/_firewall/   → hcloud_firewall (cp_rules + worker_rules)
   ├── modules/_control_plane/  → hcloud_server + hcloud_server_network + cloudinit
   └── modules/_readiness/  → terraform_data (HTTPS poll on :6443/readyz)
 ```

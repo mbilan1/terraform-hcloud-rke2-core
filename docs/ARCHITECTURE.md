@@ -34,7 +34,7 @@ This module uses **no SSH connections** at any stage:
 - **Readiness**: HTTPS polling (`curl -sk https://{ip}:6443/readyz`) — no SSH
 - **Kubeconfig**: Retrieved via the Rancher management module (`terraform-hcloud-rancher`), which has Kubernetes API access post-bootstrap — no SSH
 
-SSH keys are still created/uploaded purely for **operator access** (debugging, maintenance). The module itself never uses them.
+SSH key IDs can be optionally provided via `ssh_key_ids` for **operator access** (debugging, maintenance). The module never generates or uses SSH keys.
 
 ### Kubeconfig Strategy
 
