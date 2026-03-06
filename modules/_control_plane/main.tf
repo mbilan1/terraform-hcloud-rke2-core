@@ -37,10 +37,10 @@ locals {
   # DECISION: Common labels merged with per-node labels.
   # Why: Cluster-wide labels (managed-by, cluster-name) apply to all nodes.
   #      Per-node labels (role-specific, custom) override cluster-wide ones.
+  # NOTE: var.labels already contains cluster + managed-by from the root facade.
+  # Only add the role label here — avoid re-declaring keys that the facade owns.
   common_labels = merge(var.labels, {
-    "cluster"    = var.cluster_name
-    "managed-by" = "opentofu"
-    "role"       = "control-plane"
+    "role" = "control-plane"
   })
 }
 

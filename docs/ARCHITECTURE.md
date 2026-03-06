@@ -109,7 +109,7 @@ Each step depends on outputs from previous steps, wired through the facade.
 - **BYO Firewall**: Consumers create Hetzner firewalls externally and pass IDs via `firewall_ids` (ADR-006)
 - **Deletion protection**: Optional but recommended for production
 - **Sensitive outputs**: Private keys and tokens marked `sensitive = true`
-- **No secrets in state**: Cluster token is generated, not user-supplied
+- **Cluster token auto-generated**: Token is created via `random_password` and marked sensitive. Note: `random_password` result is stored in OpenTofu state — encrypt state at rest
 
 ## Design Boundaries (By Design, Not Gaps)
 

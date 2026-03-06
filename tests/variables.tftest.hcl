@@ -213,3 +213,102 @@ run "invalid_hcloud_network_zone" {
     var.hcloud_network_zone,
   ]
 }
+
+# ─── CIDR validation ─────────────────────────────────────────────────────────
+
+run "valid_cidr_network" {
+  command = plan
+
+  variables {
+    cluster_name        = "test-cluster"
+    hcloud_network_cidr = "10.0.0.0/16"
+    subnet_address      = "10.0.1.0/24"
+    delete_protection   = true
+  }
+
+  expect_failures = []
+}
+
+run "invalid_cidr_network" {
+  command = plan
+
+  variables {
+    cluster_name        = "test-cluster"
+    hcloud_network_cidr = "not-a-cidr"
+    delete_protection   = true
+  }
+
+  expect_failures = [
+    var.hcloud_network_cidr,
+  ]
+}
+
+run "invalid_cidr_subnet" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    subnet_address    = "garbage"
+    delete_protection = true
+  }
+
+  expect_failures = [
+    var.subnet_address,
+  ]
+}
+
+# ─── RKE2 version validation ─────────────────────────────────────────────────
+
+run "valid_rke2_version" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    rke2_version      = "v1.34.4+rke2r1"
+    delete_protection = true
+  }
+
+  expect_failures = []
+}
+
+run "valid_rke2_version_empty" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    rke2_version      = ""
+    delete_protection = true
+  }
+
+  expect_failures = []
+}
+
+run "invalid_rke2_version" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    rke2_version      = "1.34.4"
+    delete_protection = true
+  }
+
+  expect_failures = [
+    var.rke2_version,
+  ]
+}
+
+# ─── hcloud_image validation ─────────────────────────────────────────────────
+
+run "invalid_hcloud_image_empty" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    hcloud_image      = ""
+    delete_protection = true
+  }
+
+  expect_failures = [
+    var.hcloud_image,
+  ]
+}

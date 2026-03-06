@@ -69,6 +69,11 @@ variable "hcloud_network_cidr" {
   type        = string
   default     = "10.0.0.0/16"
   nullable    = false
+
+  validation {
+    condition     = can(cidrhost(var.hcloud_network_cidr, 0))
+    error_message = "Must be a valid CIDR notation (e.g. 10.0.0.0/16)."
+  }
 }
 
 variable "subnet_address" {
@@ -76,8 +81,14 @@ variable "subnet_address" {
   type        = string
   default     = "10.0.1.0/24"
   nullable    = false
+
+  validation {
+    condition     = can(cidrhost(var.subnet_address, 0))
+    error_message = "Must be a valid CIDR notation (e.g. 10.0.1.0/24)."
+  }
 }
 
+# NOTE: Intentionally nullable — null = "create new network" (BYO pattern).
 variable "existing_network_id" {
   description = "ID of an existing Hetzner Cloud network. When set, network creation is skipped (BYO network)."
   type        = number
@@ -153,6 +164,11 @@ variable "rke2_version" {
   type        = string
   default     = "v1.34.4+rke2r1"
   nullable    = false
+
+  validation {
+    condition     = var.rke2_version == "" || can(regex("^v\\d+\\.\\d+\\.\\d+\\+rke2r\\d+$", var.rke2_version))
+    error_message = "Must be empty or a valid RKE2 version (e.g. v1.34.4+rke2r1)."
+  }
 }
 
 variable "rke2_config" {
@@ -176,6 +192,11 @@ variable "hcloud_image" {
   type        = string
   default     = "ubuntu-24.04"
   nullable    = false
+
+  validation {
+    condition     = length(var.hcloud_image) > 0
+    error_message = "Image name must not be empty."
+  }
 }
 
 # ─── Deletion Protection ─────────────────────────────────────────────────────

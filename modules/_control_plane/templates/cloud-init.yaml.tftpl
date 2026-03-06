@@ -9,9 +9,6 @@
 
 hostname: ${hostname}
 
-# DECISION: Configure SSH port via cloud-init, not just firewall.
-# Why: Defense in depth — if a firewall rule is misconfigured, the SSH port
-#      change still provides protection against default-port scanners.
 write_files:
   # RKE2 server configuration
   - path: /etc/rancher/rke2/config.yaml
@@ -27,12 +24,12 @@ write_files:
       ${indent(6, rke2_config)}
 %{ endif ~}
 
+# DECISION: Extra server manifests placed here by consumers of this module.
+# Why: RKE2 HelmController automatically installs HelmChart CRDs from this
+#      directory. Placing cert-manager and Rancher HelmChart CRDs here enables
+#      Zero-SSH L4 bootstrap — no Kubernetes API access from Terraform needed.
+# See: https://docs.rke2.io/helm
 %{ for filename, content in extra_server_manifests ~}
-  # DECISION: Extra server manifests placed here by consumers of this module.
-  # Why: RKE2 HelmController automatically installs HelmChart CRDs from this
-  #      directory. Placing cert-manager and Rancher HelmChart CRDs here enables
-  #      Zero-SSH L4 bootstrap — no Kubernetes API access from Terraform needed.
-  # See: https://docs.rke2.io/helm
   - path: /var/lib/rancher/rke2/server/manifests/${filename}
     owner: root:root
     permissions: "0644"

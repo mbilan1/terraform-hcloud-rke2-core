@@ -26,13 +26,6 @@ resource "hcloud_network" "this" {
   delete_protection = var.delete_protection
 
   labels = var.labels
-
-  lifecycle {
-    # NOTE: Changing ip_range requires network recreation, which destroys all
-    #       attached subnets and server network attachments. Prevent accidental
-    #       changes in production.
-    prevent_destroy = false
-  }
 }
 
 # ─── Subnet ──────────────────────────────────────────────────────────────────
