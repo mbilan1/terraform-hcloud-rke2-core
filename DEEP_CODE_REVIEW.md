@@ -108,3 +108,28 @@ Well-engineered Terraform module with thoughtful zero-SSH design, composable pri
 - Provider minimalism: only 2 providers (hcloud, random) vs 6 in v1
 - Well-commented code with DECISION/COMPROMISE/NOTE/TODO prefixes
 - Pre-commit hooks for fmt, validate, tflint, docs
+
+---
+
+## Fix Verification Status (2026-03-07)
+
+Verified against commit `5b8b31f` ("fix: resolve code review findings") on `main`.
+
+| # | Issue | Severity | Status | Notes |
+|---|-------|----------|--------|-------|
+| 1 | Stale RKE2 version in README | High | **PARTIAL** | Code updated to v1.34.4; terraform-docs not regenerated, README still shows v1.32.2 |
+| 2 | Dead worker_nodes in README | High | **NOT FIXED** | terraform-docs not regenerated; stale variable still in auto-generated docs |
+| 3 | No checksum for RKE2 install | Medium | **ACCEPTED** | Upstream curl\|sh method; documented as acceptable risk |
+| 4 | ignore_changes breaks drift | Medium | **PARTIAL** | COMPROMISE comment added; README not updated |
+| 5 | Cluster token in state | Medium | **PARTIAL** | ARCHITECTURE.md updated with state security note |
+| 6 | No subnet CIDR containment | Medium | **PARTIAL** | Syntax validation added; containment check not in guardrails.tf |
+| 7 | Missing state encryption docs | Medium | **NOT FIXED** | No "State Management & Security" section in README |
+| 8 | No YAML validation for manifests | Low | **PARTIAL** | Variable description enhanced with format requirements |
+| 9 | Missing firewall rules docs | Low | **PARTIAL** | Comment added; no README documentation |
+| 10 | No backup strategy guidance | Low | **NOT FIXED** | No backup documentation added |
+| 11 | Limited RKE2 version tests | Low | **FIXED** | 3 new test cases added for edge cases |
+| 12 | Stale SSH key comment | Low | **FIXED** | Comment updated to reflect True Zero-SSH |
+| 13 | Readiness timeout | Low | **FIXED** | Timeout value and documentation corrected |
+| 14 | Label duplication | Trivial | **FIXED** | Duplicate labels removed |
+
+**Summary**: 4/14 fully fixed, 6 partial, 3 not fixed, 1 accepted as-is.
