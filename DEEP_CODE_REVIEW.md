@@ -8,7 +8,7 @@
 
 Well-engineered Terraform module with thoughtful zero-SSH design, composable primitives, and BYO patterns. Critical findings are primarily documentation staleness (auto-generated docs not regenerated after version bumps) and validation gaps.
 
-**Total Issues: 19** — 0 Critical, 2 High, 5 Medium, 7 Low, 5 Trivial
+**Total Issues: 14** — 0 Critical, 2 High, 5 Medium, 7 Low
 
 ---
 
@@ -34,8 +34,8 @@ Well-engineered Terraform module with thoughtful zero-SSH design, composable pri
 ### 3. No Checksum Verification for RKE2 Install
 
 - **File**: `modules/_control_plane/templates/cloud-init.yaml.tftpl:48-50`
-- `curl -sfL https://get.rke2.io | sh -` — pipes directly to shell. Standard upstream method, but TOFU security model.
-- **Fix**: Document HTTPS-only verification and network security requirements.
+- `curl -sfL https://get.rke2.io | sh -` — pipes directly to shell. Standard upstream method, but trust-on-first-use (TOFU) security model with no checksum or signature verification.
+- **Fix**: Add SHA-256 checksum verification of the install script, or at minimum document HTTPS-only verification, network security requirements, and the accepted TOFU risk.
 
 ### 4. `ignore_changes` on `user_data` Breaks Drift Detection
 
@@ -91,7 +91,7 @@ Well-engineered Terraform module with thoughtful zero-SSH design, composable pri
 
 ### 12-14. Minor Issues
 
-- Join address implicit dependency (documented as Compromise #C2 in ARCHITECTURE.md)
+- Join address implicit dependency (documented as Compromise #C2 in `docs/ARCHITECTURE.md`)
 - No SSH key strength validation (acceptable — keys are optional)
 - Cloud-init conditional comment in output YAML (trivial noise)
 
