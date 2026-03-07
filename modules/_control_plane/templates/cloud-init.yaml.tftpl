@@ -43,12 +43,15 @@ runcmd:
   #      is fully configured. A small sleep prevents transient curl failures.
   - sleep 5
 
-  # Install RKE2 server
+  # Install RKE2 server (skip download if pre-baked image)
+  - |
+    if [ ! -f /etc/rke2-image-version ]; then
 %{ if rke2_version != "" ~}
-  - curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${rke2_version}" sh -
+      curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${rke2_version}" sh -
 %{ else ~}
-  - curl -sfL https://get.rke2.io | sh -
+      curl -sfL https://get.rke2.io | sh -
 %{ endif ~}
+    fi
 
 %{ if !is_initial ~}
   # NOTE: Joining node connects to the initial master via its private IP,

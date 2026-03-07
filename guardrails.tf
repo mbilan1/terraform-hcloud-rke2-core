@@ -71,3 +71,21 @@ check "delete_protection_advisory" {
     error_message = "ADVISORY: delete_protection is false. All resources can be destroyed without protection. Consider enabling it for production clusters."
   }
 }
+
+# ─── Subnet Must Be Within Network CIDR ─────────────────────────────────────
+
+# DECISION: Validate subnet containment at plan time instead of failing at apply.
+# Why: Hetzner API rejects subnets outside the network CIDR, but the error is
+#      cryptic. This guardrail provides a clear warning during plan.
+check "subnet_within_network_cidr" {
+  assert {
+    condition = (
+      var.existing_network_id != null ||
+      (
+        tonumber(split("/", var.subnet_address)[1]) >= tonumber(split("/", var.hcloud_network_cidr)[1]) &&
+        cidrhost("${cidrhost(var.subnet_address, 0)}/${split("/", var.hcloud_network_cidr)[1]}", 0) == cidrhost(var.hcloud_network_cidr, 0)
+      )
+    )
+    error_message = "subnet_address (${var.subnet_address}) must be contained within hcloud_network_cidr (${var.hcloud_network_cidr})."
+  }
+}
