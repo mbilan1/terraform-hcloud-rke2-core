@@ -121,3 +121,26 @@ The following items are intentionally **out of scope** for this module:
 | Load balancer | Control-plane LB and ingress LB are separate concerns | Separate module (`terraform-hcloud-lb` or similar) |
 | Packer images | Image baking is a separate workflow with different lifecycle | Separate Packer configuration |
 | Kubeconfig retrieval | Zero-SSH design — kubeconfig fetched by Rancher module | `terraform-hcloud-rancher` |
+
+## Roadmap
+
+### Completed
+
+- [x] Composable primitive architecture (facade + 3 submodules)
+- [x] True Zero-SSH design (ADR-002) — cloud-init only, HTTPS readiness
+- [x] BYO resources (network, firewall)
+- [x] `for_each` node identity with heterogeneous configs
+- [x] Variable validations + cross-variable guardrails
+- [x] Unit tests with `mock_provider` (31 tests, ~3s, $0)
+- [x] CI pipeline — Gate 0 (lint/SAST) + Gate 1 (unit tests) (ADR-010)
+- [x] `examples/complete/` — HA 3-node with BYO firewall (ADR-006)
+- [x] `examples/minimal/` — single-node dev cluster
+- [x] Git-tagged source for consumer modules (`v0.1.0`)
+
+### Planned
+
+- [ ] `_worker` submodule — dedicated worker node primitive
+- [ ] Control-plane LB submodule (ADR-003)
+- [ ] Placement group support for anti-affinity
+- [ ] IPv6 dual-stack support
+- [ ] Custom cloud-init extension points (pre/post RKE2 hooks)
