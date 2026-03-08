@@ -107,7 +107,7 @@ module "readiness" {
   # Why: Readiness uses HTTPS polling (curl to port 6443), not SSH.
   #      Zero-SSH design: no private key dependency between primitives.
   create              = var.create
-  initial_master_ipv4 = try(module.control_plane.initial_master_ipv4, "")
+  initial_master_ipv4 = var.create ? module.control_plane.initial_master_ipv4 : ""
 
   depends_on = [module.control_plane]
 }

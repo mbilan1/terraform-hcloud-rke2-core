@@ -58,9 +58,11 @@ variable "firewall_ids" {
 }
 
 variable "network_id" {
-  description = "Hetzner network ID for private networking."
+  description = "Hetzner network ID for private networking. Null when create=false and no BYO network."
   type        = number
-  nullable    = false
+  default     = null
+  # NOTE: nullable = true (implicit) because when create=false, the network
+  # module outputs null and no server_network resources are created anyway.
 }
 
 variable "cluster_token" {

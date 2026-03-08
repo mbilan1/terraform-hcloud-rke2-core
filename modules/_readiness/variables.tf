@@ -14,7 +14,8 @@ variable "create" {
 }
 
 variable "initial_master_ipv4" {
-  description = "Public IPv4 address of the initial master node."
+  description = "Public IPv4 address of the initial master node. Null when create=false."
   type        = string
+  default     = ""
   nullable    = false
 }

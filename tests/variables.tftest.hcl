@@ -312,3 +312,17 @@ run "invalid_hcloud_image_empty" {
     var.hcloud_image,
   ]
 }
+
+# ─── Regression: create=false accepts null network_id ─────────────────────────
+
+run "create_false_accepts_null_network" {
+  command = plan
+
+  variables {
+    create            = false
+    cluster_name      = "test-cluster"
+    delete_protection = true
+  }
+
+  expect_failures = []
+}
