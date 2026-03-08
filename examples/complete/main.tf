@@ -45,7 +45,7 @@ module "rke2" {
   ssh_key_ids = []
 
   # BYO firewall — create firewalls externally and pass IDs (ADR-006)
-  firewall_ids = []
+  firewall_ids = [hcloud_firewall.rke2.id]
 
   # Custom network ranges
   hcloud_network_cidr = "10.100.0.0/16"
@@ -62,6 +62,46 @@ module "rke2" {
   labels = {
     "environment" = "production"
     "team"        = "platform"
+  }
+}
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  BYO Firewall (ADR-006)                                                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+# DECISION: Firewall created in the example, not in the module.
+# Why: ADR-006 — firewalls are BYO. Hetzner firewalls are account-level
+#      singletons with per-server attachment. The module accepts firewall_ids;
+#      consumers create and manage firewall rules externally.
+resource "hcloud_firewall" "rke2" {
+  name = "production-cluster-rke2"
+
+  labels = {
+    "cluster-name" = "production-cluster"
+    "managed-by"   = "opentofu"
+  }
+
+  # ICMP — diagnostics
+  rule {
+    direction  = "in"
+    protocol   = "icmp"
+    source_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  # K8s API — restrict to operator networks
+  rule {
+    direction  = "in"
+    protocol   = "tcp"
+    port       = "6443"
+    source_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  # RKE2 supervisor — node join (restrict in production)
+  rule {
+    direction  = "in"
+    protocol   = "tcp"
+    port       = "9345"
+    source_ips = ["0.0.0.0/0", "::/0"]
   }
 }
 
