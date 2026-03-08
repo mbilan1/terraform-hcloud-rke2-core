@@ -114,3 +114,64 @@ run "location_zone_mismatch_warns" {
     check.location_network_zone_match,
   ]
 }
+
+# ─── Subnet containment check ─────────────────────────────────────────────
+
+run "subnet_outside_network_warns" {
+  command = plan
+
+  variables {
+    cluster_name        = "test-cluster"
+    hcloud_network_cidr = "10.0.0.0/16"
+    subnet_address      = "192.168.1.0/24"
+    delete_protection   = true
+  }
+
+  expect_failures = [
+    check.subnet_within_network_cidr,
+  ]
+}
+
+run "subnet_within_network_ok" {
+  command = plan
+
+  variables {
+    cluster_name        = "test-cluster"
+    hcloud_network_cidr = "10.0.0.0/16"
+    subnet_address      = "10.0.1.0/24"
+    delete_protection   = true
+  }
+
+  expect_failures = []
+}
+
+run "subnet_wider_than_network_warns" {
+  command = plan
+
+  variables {
+    cluster_name        = "test-cluster"
+    hcloud_network_cidr = "10.0.0.0/24"
+    subnet_address      = "10.0.0.0/16"
+    delete_protection   = true
+  }
+
+  expect_failures = [
+    check.subnet_within_network_cidr,
+  ]
+}
+
+run "subnet_check_skipped_for_byo_network" {
+  command = plan
+
+  variables {
+    cluster_name        = "test-cluster"
+    existing_network_id = 12345
+    hcloud_network_cidr = "10.0.0.0/16"
+    subnet_address      = "192.168.1.0/24"
+    delete_protection   = true
+  }
+
+  expect_failures = [
+    check.byo_network_subnet_ignored,
+  ]
+}

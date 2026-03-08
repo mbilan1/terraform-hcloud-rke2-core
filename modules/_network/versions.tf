@@ -1,8 +1,9 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # _network — Provider Requirements
 #
-# NOTE: Child modules use floor constraints (>=) per terraform-skill convention.
-#       The root module pins the upper bound with pessimistic (~>) constraints.
+# DECISION: Exact version pins (=) for reproducible deployments.
+# Why: Aligned with root module pin strategy. Every module in the dependency
+#      tree uses the same exact version to prevent constraint conflicts.
 # ──────────────────────────────────────────────────────────────────────────────
 
 terraform {
@@ -11,7 +12,7 @@ terraform {
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = ">= 1.49"
+      version = "= 1.60.1"
     }
   }
 }
