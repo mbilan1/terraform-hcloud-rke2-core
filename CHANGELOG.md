@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **CI/CD**: Gate 0 (lint + SAST) and Gate 1 (unit tests) GitHub Actions workflows (ADR-010)
+- **examples/complete/**: BYO firewall resource demonstrating ADR-006 pattern (ICMP, 6443, 9345 rules)
+
+### Fixed
+
+- **create=false bug**: `network_id` output was `null` when `create = false` due to `for_each` empty map — added `try()` fallback
+
+### Changed
+
+- **Module source**: `examples/` switched from local `source = "../.."` to git reference `v0.1.0` for stability
+
 ## [0.1.0] - 2026-03-06
 
 ### Added
