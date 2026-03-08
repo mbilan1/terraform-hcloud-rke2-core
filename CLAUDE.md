@@ -56,7 +56,7 @@ An **OpenTofu/Terraform module** (NOT a root deployment) that provisions **L3 in
 
 ## Quick Reference
 
-- **26 tests**, mock_provider, ~3s, $0: `tofu test`
+- **31 tests**, mock_provider, ~3s, $0: `tofu test`
 - **Validate**: `tofu validate` (safe, always run after edits)
 - **Format**: `tofu fmt` (safe, auto-fix)
 - **NEVER**: `tofu plan` in root, `tofu apply`, `tofu destroy`, `tofu init -upgrade`
