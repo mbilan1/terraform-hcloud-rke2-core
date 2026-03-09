@@ -20,7 +20,7 @@ write_files:
 %{ endif ~}
       tls-san:
         - ${hostname}
-%{ if cis_profile ~}
+%{ if enable_cis ~}
       profile: cis
 %{ endif ~}
 %{ if rke2_config != "" ~}
@@ -46,8 +46,8 @@ runcmd:
   #      is fully configured. A small sleep prevents transient curl failures.
   - sleep 5
 
-%{ if cis_profile ~}
-  # CIS profile prerequisites — must be done BEFORE rke2-server starts.
+%{ if enable_cis ~}
+  # CIS prerequisites — idempotent (safe on both stock and Packer images).
   # See: https://docs.rke2.io/security/hardening_guide
   - useradd -r -c "etcd user" -s /sbin/nologin -M etcd -U || true
   - |

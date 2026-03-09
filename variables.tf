@@ -171,14 +171,15 @@ variable "rke2_version" {
   }
 }
 
-# DECISION: CIS profile as a first-class boolean, not a rke2_config string.
+# DECISION: Single CIS feature flag for both Packer and Profile flows.
 # Why: RKE2 CIS profile (profile: cis) requires OS-level prerequisites
-#      (etcd user, kernel params) BEFORE rke2-server starts. A boolean lets
-#      the cloud-init template handle both the prerequisites and the config
-#      entry atomically, avoiding boot failures from missing prereqs.
+#      (etcd user, kernel params) BEFORE rke2-server starts. This flag
+#      handles both the prerequisites and the config entry atomically.
+#      Prerequisites are idempotent — safe on both stock images (cloud-init
+#      creates them) and Packer golden images (already baked in by rke2-base).
 # See: https://docs.rke2.io/security/hardening_guide
-variable "cis_profile" {
-  description = "Enable RKE2 CIS 1.23 profile. Automatically creates etcd user, sets required kernel parameters, and adds 'profile: cis' to config.yaml."
+variable "enable_cis" {
+  description = "Enable RKE2 CIS hardening. Creates etcd user, sets required kernel params, and adds 'profile: cis' to config.yaml. Safe on both stock images and Packer golden images (prerequisites are idempotent)."
   type        = bool
   default     = false
   nullable    = false

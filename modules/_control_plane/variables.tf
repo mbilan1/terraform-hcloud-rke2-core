@@ -79,8 +79,8 @@ variable "rke2_version" {
   nullable    = false
 }
 
-variable "cis_profile" {
-  description = "Enable RKE2 CIS 1.23 profile with OS-level prerequisites."
+variable "enable_cis" {
+  description = "Enable RKE2 CIS hardening. Creates etcd user, sets kernel params, adds 'profile: cis'. Idempotent on Packer images."
   type        = bool
   default     = false
   nullable    = false
