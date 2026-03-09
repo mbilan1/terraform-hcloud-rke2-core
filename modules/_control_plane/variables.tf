@@ -79,6 +79,13 @@ variable "rke2_version" {
   nullable    = false
 }
 
+variable "enable_cis" {
+  description = "Enable RKE2 CIS hardening. Creates etcd user, sets kernel params, adds 'profile: cis'. Idempotent on Packer images."
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
 variable "rke2_config" {
   description = "Additional RKE2 config.yaml content."
   type        = string

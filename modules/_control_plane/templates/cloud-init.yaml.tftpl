@@ -20,6 +20,9 @@ write_files:
 %{ endif ~}
       tls-san:
         - ${hostname}
+%{ if enable_cis ~}
+      profile: cis
+%{ endif ~}
 %{ if rke2_config != "" ~}
       ${indent(6, rke2_config)}
 %{ endif ~}
@@ -42,6 +45,20 @@ runcmd:
   # Why: Hetzner Cloud sometimes has a brief delay before the network interface
   #      is fully configured. A small sleep prevents transient curl failures.
   - sleep 5
+
+%{ if enable_cis ~}
+  # CIS prerequisites — idempotent (safe on both stock and Packer images).
+  # See: https://docs.rke2.io/security/hardening_guide
+  - useradd -r -c "etcd user" -s /sbin/nologin -M etcd -U || true
+  - |
+    cat > /etc/sysctl.d/90-rke2-cis.conf << 'SYSCTL'
+    vm.panic_on_oom=0
+    vm.overcommit_memory=1
+    kernel.panic=10
+    kernel.panic_on_oops=1
+    SYSCTL
+  - sysctl --system
+%{ endif ~}
 
   # Install RKE2 server (skip download if pre-baked image)
   - |

@@ -64,6 +64,7 @@ resource "hcloud_server" "initial" {
     is_initial             = true
     rke2_version           = var.rke2_version
     rke2_config            = var.rke2_config
+    enable_cis             = var.enable_cis
     cluster_token          = var.cluster_token
     join_address           = ""
     extra_server_manifests = var.extra_server_manifests
@@ -116,6 +117,7 @@ resource "hcloud_server" "joining" {
     is_initial    = false
     rke2_version  = var.rke2_version
     rke2_config   = var.rke2_config
+    enable_cis    = var.enable_cis
     cluster_token = var.cluster_token
     # DECISION: Join via initial master's private IP from network attachment.
     # Why: Using private IP keeps supervisor API traffic on the private network.
