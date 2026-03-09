@@ -171,6 +171,19 @@ variable "rke2_version" {
   }
 }
 
+# DECISION: CIS profile as a first-class boolean, not a rke2_config string.
+# Why: RKE2 CIS profile (profile: cis) requires OS-level prerequisites
+#      (etcd user, kernel params) BEFORE rke2-server starts. A boolean lets
+#      the cloud-init template handle both the prerequisites and the config
+#      entry atomically, avoiding boot failures from missing prereqs.
+# See: https://docs.rke2.io/security/hardening_guide
+variable "cis_profile" {
+  description = "Enable RKE2 CIS 1.23 profile. Automatically creates etcd user, sets required kernel parameters, and adds 'profile: cis' to config.yaml."
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
 variable "rke2_config" {
   description = "Additional RKE2 config.yaml content appended to every node's configuration."
   type        = string

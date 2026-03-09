@@ -89,6 +89,7 @@ module "control_plane" {
   cluster_token = try(random_password.cluster_token["this"].result, "")
   rke2_version  = var.rke2_version
   rke2_config   = var.rke2_config
+  cis_profile   = var.cis_profile
 
   extra_server_manifests = var.extra_server_manifests
 

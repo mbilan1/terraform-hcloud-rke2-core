@@ -326,3 +326,29 @@ run "create_false_accepts_null_network" {
 
   expect_failures = []
 }
+
+# ─── CIS profile ─────────────────────────────────────────────────────────────
+
+run "cis_profile_default_false" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    delete_protection = true
+  }
+
+  assert {
+    condition     = var.cis_profile == false
+    error_message = "cis_profile should default to false."
+  }
+}
+
+run "cis_profile_accepts_true" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    cis_profile       = true
+    delete_protection = true
+  }
+}

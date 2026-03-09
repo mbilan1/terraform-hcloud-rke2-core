@@ -79,6 +79,13 @@ variable "rke2_version" {
   nullable    = false
 }
 
+variable "cis_profile" {
+  description = "Enable RKE2 CIS 1.23 profile with OS-level prerequisites."
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
 variable "rke2_config" {
   description = "Additional RKE2 config.yaml content."
   type        = string
