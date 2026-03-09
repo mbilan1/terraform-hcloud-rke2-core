@@ -52,6 +52,7 @@ rke2-core (L3 infra) → rancher (L3+L4 management) → cluster-templates (downs
 - **`for_each` node identity**: Stable node addressing via map keys (no count drift)
 - **Flat variable API**: Simple overrides, clear plan diffs
 - **Preflight guardrails**: Cross-variable checks warn about risky configurations
+- **CIS hardening**: Optional RKE2 CIS 1.23 profile via `enable_cis` (idempotent with Packer images)
 - **Zero-credential tests**: `tofu test` with mock providers (~3s, $0)
 
 ## Quick Start
