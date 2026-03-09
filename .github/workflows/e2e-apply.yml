@@ -1,0 +1,61 @@
+name: "E2E: apply"
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_cost:
+        description: "I confirm this will provision real infrastructure (~$0.50/run)"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: apply + smoke + destroy
+    runs-on: ubuntu-latest
+    if: inputs.confirm_cost == true && vars.HAS_CLOUD_CREDENTIALS == 'true'
+    defaults:
+      run:
+        working-directory: examples/minimal
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f # v1.0.8
+
+      - name: Init
+        run: tofu init
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+
+      - name: Apply
+        run: tofu apply -auto-approve -no-color -input=false
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+
+      - name: Smoke test — verify outputs
+        run: |
+          IP=$(tofu output -raw initial_master_ip)
+          echo "Control plane IP: $IP"
+          [ -n "$IP" ] || { echo "FAIL: empty initial_master_ip"; exit 1; }
+          # Wait for RKE2 API (up to 5 min)
+          for i in $(seq 1 60); do
+            if curl -sk --connect-timeout 5 "https://$IP:6443/readyz" 2>/dev/null | grep -q ok; then
+              echo "PASS: API server ready"
+              exit 0
+            fi
+            echo "Waiting for API server... ($i/60)"
+            sleep 5
+          done
+          echo "WARN: API server not ready within 5 min (may still be bootstrapping)"
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+
+      - name: Destroy
+        if: always()
+        run: tofu destroy -auto-approve -no-color -input=false
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
