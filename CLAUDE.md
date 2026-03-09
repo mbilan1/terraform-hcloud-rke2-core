@@ -354,6 +354,7 @@ README.md contains version badges (shields.io) that must stay in sync with `vers
 | OpenTofu | `versions.tf` → `required_version` | `OpenTofu-<version>` |
 | hcloud | `versions.tf` → `required_providers.hcloud.version` | `hcloud-<version>` |
 | random | `versions.tf` → `required_providers.random.version` | `random-<version>` |
+| RKE2 | `variables.tf` → `rke2_version` default | `RKE2-<version>` |
 
 When bumping a provider version:
 1. Update `versions.tf`
