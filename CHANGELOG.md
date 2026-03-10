@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **CIS hardening**: `enable_cis` variable — single feature flag for RKE2 CIS 1.23 profile (ADR-011)
+- **CIS hardening**: `enable_cis` variable — single feature flag for RKE2 CIS profile (ADR-011)
 - **CIS cloud-init prereqs**: Idempotent etcd user/group creation, kernel sysctl params, audit directory — safe with both stock and Packer-baked images
 - **CI/CD**: Gate 0 (lint + SAST) and Gate 1 (unit tests) GitHub Actions workflows (ADR-010)
 - **examples/complete/**: BYO firewall resource demonstrating ADR-006 pattern (ICMP, 6443, 9345 rules)
@@ -43,4 +43,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Dead `worker_nodes` variable (workers out of scope — ADR)
+- Dead `worker_nodes` variable (workers out of scope — ADR-001)

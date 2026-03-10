@@ -6,8 +6,6 @@ Uses `local-exec` with `curl` to poll `https://{ip}:6443/readyz` — no SSH
 required. Part of the zero-SSH design philosophy.
 
 <!-- BEGIN_TF_DOCS -->
-
-
 ## Requirements
 
 | Name | Version |
@@ -34,8 +32,8 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_initial_master_ipv4"></a> [initial\_master\_ipv4](#input\_initial\_master\_ipv4) | Public IPv4 address of the initial master node. | `string` | n/a | yes |
 | <a name="input_create"></a> [create](#input\_create) | Controls whether readiness checks are executed. | `bool` | `true` | no |
+| <a name="input_initial_master_ipv4"></a> [initial\_master\_ipv4](#input\_initial\_master\_ipv4) | Public IPv4 address of the initial master node. Null when create=false. | `string` | `""` | no |
 
 ## Outputs
 

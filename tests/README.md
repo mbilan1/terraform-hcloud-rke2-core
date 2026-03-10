@@ -17,8 +17,8 @@ tofu test -filter=tests/guardrails.tftest.hcl
 
 | File | Tests | Scope |
 |------|:-----:|-------|
-| `variables.tftest.hcl` | 16 | Variable validation (positive + negative) |
-| `guardrails.tftest.hcl` | 5 | Cross-variable check blocks |
+| `variables.tftest.hcl` | 23 | Variable validation (positive + negative) |
+| `guardrails.tftest.hcl` | 10 | Cross-variable check blocks |
 
 ## Design
 

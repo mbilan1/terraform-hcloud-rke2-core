@@ -131,7 +131,7 @@ The following items are intentionally **out of scope** for this module:
 - [x] BYO resources (network, firewall)
 - [x] `for_each` node identity with heterogeneous configs
 - [x] Variable validations + cross-variable guardrails
-- [x] Unit tests with `mock_provider` (31 tests, ~3s, $0)
+- [x] Unit tests with `mock_provider` (33 tests, ~3s, $0)
 - [x] CI pipeline — Gate 0 (lint/SAST) + Gate 1 (unit tests) (ADR-010)
 - [x] `examples/complete/` — HA 3-node with BYO firewall (ADR-006)
 - [x] `examples/minimal/` — single-node dev cluster
