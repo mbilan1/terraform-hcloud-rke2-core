@@ -340,8 +340,8 @@ Scope: `network`, `firewall`, `control-plane`, `readiness`, `examples`, `provide
 
 Platform-wide decisions are documented in a separate repository:
 - **Repo**: [rke2-hetzner-architecture](https://github.com/mbilan1/rke2-hetzner-architecture)
-- Contains: ADRs (8), investigation reports (3), design documents (2)
-- Key ADRs: True Zero-SSH (002), Dual LB (003), Shared Network (005), CAPI Autoscaler (008)
+- Contains: ADRs (13), investigation reports (6), design documents (5)
+- Key ADRs: True Zero-SSH (002), Dual LB (003), Shared Network (005), CAPI Autoscaler (008), CIS Feature Flag (011), CP Workload Separation (013)
 
 ---
 
