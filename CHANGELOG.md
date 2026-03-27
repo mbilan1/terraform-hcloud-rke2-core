@@ -13,14 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CIS cloud-init prereqs**: Idempotent etcd user/group creation, kernel sysctl params, audit directory — safe with both stock and Packer-baked images
 - **CI/CD**: Gate 0 (lint + SAST) and Gate 1 (unit tests) GitHub Actions workflows (ADR-010)
 - **examples/complete/**: BYO firewall resource demonstrating ADR-006 pattern (ICMP, 6443, 9345 rules)
+- **Tests**: Expanded from 19 to 33 unit tests (CIS variable tests, guardrails coverage)
 
 ### Fixed
 
 - **create=false bug**: `network_id` output was `null` when `create = false` due to `for_each` empty map — added `try()` fallback
+- **CI**: tfsec workflow `continue-on-error` for `check {}` blocks that tfsec cannot parse
 
 ### Changed
 
 - **Module source**: `examples/` switched from local `source = "../.."` to git reference `v0.1.0` for stability
+- **Docs**: Regenerated terraform-docs, fixed CIS profile references in ARCHITECTURE.md
+- **CI**: Bumped `opentofu/setup-opentofu` 1.0.8 → 2.0.0, `bridgecrewio/checkov-action` 12.3088.0 → 12.3089.0
 
 ## [0.1.0] - 2026-03-06
 
