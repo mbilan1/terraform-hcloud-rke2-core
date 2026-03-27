@@ -15,7 +15,7 @@
 
 - [ ] `tofu fmt -check -recursive` passes
 - [ ] `tofu validate` passes
-- [ ] `tofu test` passes (23 tests, ~3s)
+- [ ] `tofu test` passes (33 tests, ~3s)
 - [ ] Comments explain **why**, using `DECISION:`/`COMPROMISE:`/`WORKAROUND:` prefixes
 - [ ] `ARCHITECTURE.md` updated if design changed
 - [ ] `CHANGELOG.md` updated
