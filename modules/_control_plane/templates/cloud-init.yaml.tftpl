@@ -75,6 +75,39 @@ runcmd:
   #       which is resolved by Terraform before this node is created.
 %{ endif ~}
 
+  # DECISION: Detect private IP at runtime and inject node-ip into RKE2 config.
+  # Why: Without node-ip, RKE2 defaults to the public IP for etcd peer URLs.
+  #      Hetzner Firewall only applies to the public interface — port 2380
+  #      (etcd peer) is blocked, causing joining nodes to fail MemberAdd.
+  #      Setting node-ip to the private IP routes all internal traffic through
+  #      the private network, which has no firewall filtering.
+  # See: INV-005 in rke2-hetzner-architecture
+  #
+  # NOTE: The private IP is assigned by hcloud_server_network AFTER server
+  #       creation. By the time runcmd reaches this point (after sleep + CIS +
+  #       RKE2 install), the network attachment is complete. The retry loop
+  #       handles any edge-case race condition (up to 120s).
+  #
+  # DECISION: Use Hetzner Metadata Service instead of grep on ip-addr output.
+  # Why: Metadata API returns the exact IP assigned by hcloud_server_network,
+  #      regardless of CIDR range (10.x, 172.16.x, 192.168.x) or interface
+  #      naming. It is the canonical source for private network configuration.
+  # See: https://docs.hetzner.cloud/#server-metadata
+  - |
+    for i in $(seq 1 60); do
+      PRIVATE_IP=$(curl -sf http://169.254.169.254/hetzner/v1/metadata/private-networks \
+        | grep '  ip:' | head -1 | awk '{print $2}')
+      if [ -n "$PRIVATE_IP" ]; then
+        echo "node-ip: $PRIVATE_IP" >> /etc/rancher/rke2/config.yaml
+        break
+      fi
+      sleep 2
+    done
+    if [ -z "$PRIVATE_IP" ]; then
+      echo "FATAL: Could not detect private IP from Hetzner metadata after 120s" >&2
+      exit 1
+    fi
+
   # Enable and start RKE2 server
   - systemctl enable rke2-server.service
   - systemctl start rke2-server.service
