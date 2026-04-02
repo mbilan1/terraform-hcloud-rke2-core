@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-04-02
+
+### Fixed
+
+- **HA etcd join failure**: Added `node-ip` detection via Hetzner Metadata Service in cloud-init. Without `node-ip`, RKE2 defaults to the public IP for etcd peer URLs — port 2380 is blocked by Hetzner Firewall on the public interface, causing joining nodes to loop on `MemberAdd` indefinitely. The fix resolves private IP at boot and injects it into `config.yaml` before RKE2 starts (INV-005)
+
 ### Added
 
 - **CIS hardening**: `enable_cis` variable — single feature flag for RKE2 CIS 1.23 profile (ADR-011)
