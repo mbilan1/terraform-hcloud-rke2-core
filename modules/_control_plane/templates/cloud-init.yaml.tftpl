@@ -96,7 +96,7 @@ runcmd:
   - |
     for i in $(seq 1 60); do
       PRIVATE_IP=$(curl -sf http://169.254.169.254/hetzner/v1/metadata/private-networks \
-        | grep '  ip:' | head -1 | awk '{print $2}')
+        | grep -E '^- ip:' | head -1 | awk '{print $3}')
       if [ -n "$PRIVATE_IP" ]; then
         echo "node-ip: $PRIVATE_IP" >> /etc/rancher/rke2/config.yaml
         break
