@@ -352,3 +352,52 @@ run "enable_cis_accepts_true" {
     delete_protection = true
   }
 }
+
+# ─── CIS PSA exempt namespaces ───────────────────────────────────────────────
+
+run "cis_psa_exempt_namespaces_default" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    delete_protection = true
+  }
+
+  assert {
+    condition     = length(var.cis_psa_exempt_namespaces) == 3
+    error_message = "cis_psa_exempt_namespaces should default to 3 RKE2 built-in namespaces."
+  }
+}
+
+run "cis_psa_exempt_namespaces_custom" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    enable_cis        = true
+    delete_protection = true
+    cis_psa_exempt_namespaces = [
+      "kube-system",
+      "cis-operator-system",
+      "tigera-operator",
+      "cattle-system",
+      "fleet-default",
+    ]
+  }
+}
+
+run "cis_psa_exempt_namespaces_ignored_when_cis_disabled" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    enable_cis        = false
+    delete_protection = true
+    cis_psa_exempt_namespaces = [
+      "kube-system",
+      "cis-operator-system",
+      "tigera-operator",
+      "cattle-system",
+    ]
+  }
+}

@@ -23,8 +23,45 @@ write_files:
 %{ if enable_cis ~}
       profile: cis
 %{ endif ~}
+%{ if enable_cis && length(cis_psa_exempt_namespaces) > 3 ~}
+      pod-security-admission-config-file: /etc/rancher/rke2/rke2-psa-custom.yaml
+%{ endif ~}
 %{ if rke2_config != "" ~}
       ${indent(6, rke2_config)}
+%{ endif ~}
+
+%{ if enable_cis && length(cis_psa_exempt_namespaces) > 3 ~}
+  # DECISION: Custom PSA admission config overrides RKE2 auto-generated rke2-pss.yaml.
+  # Why: RKE2 CIS profile auto-generates a PSA config that only exempts kube-system,
+  #      cis-operator-system, and tigera-operator. Consumers (e.g. Rancher) need
+  #      additional system namespaces exempted. The pod-security-admission-config-file
+  #      directive replaces the auto-generated file at the kube-apiserver level —
+  #      immune to controller reconciliation (unlike namespace label approaches).
+  # See: https://docs.rke2.io/security/hardening_guide
+  - path: /etc/rancher/rke2/rke2-psa-custom.yaml
+    permissions: "0600"
+    content: |
+      apiVersion: apiserver.config.k8s.io/v1
+      kind: AdmissionConfiguration
+      plugins:
+        - name: PodSecurity
+          configuration:
+            apiVersion: pod-security.admission.config.k8s.io/v1
+            kind: PodSecurityConfiguration
+            defaults:
+              enforce: "restricted"
+              enforce-version: "latest"
+              audit: "restricted"
+              audit-version: "latest"
+              warn: "restricted"
+              warn-version: "latest"
+            exemptions:
+              usernames: []
+              runtimeClasses: []
+              namespaces:
+%{ for ns in cis_psa_exempt_namespaces ~}
+                - ${ns}
+%{ endfor ~}
 %{ endif ~}
 
 # DECISION: Extra server manifests placed here by consumers of this module.

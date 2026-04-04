@@ -185,6 +185,20 @@ variable "enable_cis" {
   nullable    = false
 }
 
+variable "cis_psa_exempt_namespaces" {
+  # DECISION: List variable for PSA namespace exemptions, not a full YAML string.
+  # Why: Type-safe, self-documenting, extensible by consumers.
+  #      When the list exceeds the RKE2 built-in defaults, a custom PSA
+  #      admission config file is generated and passed to kube-apiserver via
+  #      pod-security-admission-config-file. This overrides the auto-generated
+  #      rke2-pss.yaml while keeping all other CIS hardening intact.
+  # See: https://docs.rke2.io/security/hardening_guide
+  description = "Namespaces to exempt from CIS restricted PSA enforcement. Only used when enable_cis = true. When more than the 3 RKE2 built-in defaults are specified, a custom PSA admission config file is generated."
+  type        = list(string)
+  default     = ["kube-system", "cis-operator-system", "tigera-operator"]
+  nullable    = false
+}
+
 variable "rke2_config" {
   description = "Additional RKE2 config.yaml content appended to every node's configuration."
   type        = string

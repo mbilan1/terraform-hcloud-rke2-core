@@ -86,6 +86,13 @@ variable "enable_cis" {
   nullable    = false
 }
 
+variable "cis_psa_exempt_namespaces" {
+  description = "Namespaces to exempt from CIS restricted PSA enforcement. Only used when enable_cis = true."
+  type        = list(string)
+  default     = ["kube-system", "cis-operator-system", "tigera-operator"]
+  nullable    = false
+}
+
 variable "rke2_config" {
   description = "Additional RKE2 config.yaml content."
   type        = string

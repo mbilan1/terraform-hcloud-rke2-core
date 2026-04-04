@@ -60,14 +60,15 @@ resource "hcloud_server" "initial" {
   firewall_ids = var.firewall_ids
 
   user_data = templatefile("${path.module}/templates/cloud-init.yaml.tftpl", {
-    hostname               = "${var.cluster_name}-${each.key}"
-    is_initial             = true
-    rke2_version           = var.rke2_version
-    rke2_config            = var.rke2_config
-    enable_cis             = var.enable_cis
-    cluster_token          = var.cluster_token
-    join_address           = ""
-    extra_server_manifests = var.extra_server_manifests
+    hostname                  = "${var.cluster_name}-${each.key}"
+    is_initial                = true
+    rke2_version              = var.rke2_version
+    rke2_config               = var.rke2_config
+    enable_cis                = var.enable_cis
+    cis_psa_exempt_namespaces = var.cis_psa_exempt_namespaces
+    cluster_token             = var.cluster_token
+    join_address              = ""
+    extra_server_manifests    = var.extra_server_manifests
   })
 
   delete_protection  = var.delete_protection
@@ -113,12 +114,13 @@ resource "hcloud_server" "joining" {
   firewall_ids = var.firewall_ids
 
   user_data = templatefile("${path.module}/templates/cloud-init.yaml.tftpl", {
-    hostname      = "${var.cluster_name}-${each.key}"
-    is_initial    = false
-    rke2_version  = var.rke2_version
-    rke2_config   = var.rke2_config
-    enable_cis    = var.enable_cis
-    cluster_token = var.cluster_token
+    hostname                  = "${var.cluster_name}-${each.key}"
+    is_initial                = false
+    rke2_version              = var.rke2_version
+    rke2_config               = var.rke2_config
+    enable_cis                = var.enable_cis
+    cis_psa_exempt_namespaces = var.cis_psa_exempt_namespaces
+    cluster_token             = var.cluster_token
     # DECISION: Join via initial master's private IP from network attachment.
     # Why: Using private IP keeps supervisor API traffic on the private network.
     #      The IP is reliably known because hcloud_server_network.initial is
