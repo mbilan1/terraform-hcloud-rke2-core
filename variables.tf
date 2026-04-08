@@ -162,7 +162,7 @@ variable "control_plane_nodes" {
 variable "rke2_version" {
   description = "RKE2 version to install. Empty string uses the upstream stable channel (less reproducible)."
   type        = string
-  default     = "v1.34.4+rke2r1"
+  default     = "v1.35.3+rke2r1"
   nullable    = false
 
   validation {

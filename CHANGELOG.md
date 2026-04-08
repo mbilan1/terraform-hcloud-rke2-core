@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-08
+
+### Changed
+
+- **RKE2 default version**: Bumped from `v1.34.4+rke2r1` to `v1.35.3+rke2r1`
+
 ## [0.2.2] - 2026-04-02
 
 ### Fixed
