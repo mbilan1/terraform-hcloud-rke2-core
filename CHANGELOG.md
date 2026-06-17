@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **OS image default**: Bumped from `ubuntu-24.04` to `ubuntu-26.04` (root `var.hcloud_image` + `_control_plane` submodule). NOTE: Ubuntu 26.04 LTS (released 2026-04) is available on Hetzner Cloud (`ubuntu-26.04`, added 2026-05-18) but is **not yet listed in the RKE2 v1.35 / Rancher 2.14 support matrix** (validated: 24.04/22.04/20.04). Adopted per explicit operator requirement; revisit once it appears in the matrix.
+- **RKE2 default version**: Bumped to `v1.35.5+rke2r2` (latest patch in the Rancher-2.14.2-certified 1.35 minor). Aligned the version-registry table, `_control_plane` submodule default, and `examples/complete` (were drifted at `v1.34.4`).
+- **Providers**: `hcloud` `1.60.1` → `1.65.0`; `random` `3.8.1` → `3.9.0` (root + `_network` + `_control_plane`). README version badges synced.
+
 ## [0.4.0] - 2026-04-08
 
 ### Changed

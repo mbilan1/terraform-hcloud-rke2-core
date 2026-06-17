@@ -162,7 +162,7 @@ variable "control_plane_nodes" {
 variable "rke2_version" {
   description = "RKE2 version to install. Empty string uses the upstream stable channel (less reproducible)."
   type        = string
-  default     = "v1.35.3+rke2r1"
+  default     = "v1.35.5+rke2r2"
   nullable    = false
 
   validation {
@@ -216,9 +216,9 @@ variable "extra_server_manifests" {
 # ─── OS Image ─────────────────────────────────────────────────────────────────
 
 variable "hcloud_image" {
-  description = "OS image for all nodes. Must be an Ubuntu 24.04 image name or ID."
+  description = "OS image for all nodes. Must be an Ubuntu 26.04 image name or ID."
   type        = string
-  default     = "ubuntu-24.04"
+  default     = "ubuntu-26.04"
   nullable    = false
 
   validation {

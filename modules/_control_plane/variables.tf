@@ -39,7 +39,7 @@ variable "hcloud_location" {
 variable "hcloud_image" {
   description = "OS image name or ID for the servers."
   type        = string
-  default     = "ubuntu-24.04"
+  default     = "ubuntu-26.04"
   nullable    = false
 }
 
@@ -75,7 +75,7 @@ variable "cluster_token" {
 variable "rke2_version" {
   description = "RKE2 version to install."
   type        = string
-  default     = "v1.34.4+rke2r1"
+  default     = "v1.35.5+rke2r2"
   nullable    = false
 }
 

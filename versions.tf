@@ -13,11 +13,11 @@
 # │ Component                    │ Version              │ Defined in           │
 # ├──────────────────────────────┼──────────────────────┼──────────────────────┤
 # │ OpenTofu (runtime)           │ >= 1.8.0             │ versions.tf          │
-# │ RKE2 / Kubernetes            │ v1.34.4+rke2r1       │ var.rke2_version     │
-# │ OS image                     │ ubuntu-24.04         │ var.hcloud_image     │
+# │ RKE2 / Kubernetes            │ v1.35.5+rke2r2       │ var.rke2_version     │
+# │ OS image                     │ ubuntu-26.04         │ var.hcloud_image     │
 # ├──────────────────────────────┼──────────────────────┼──────────────────────┤
-# │ Provider: hcloud             │ = 1.60.1             │ versions.tf          │
-# │ Provider: random             │ = 3.8.1              │ versions.tf          │
+# │ Provider: hcloud             │ = 1.65.0             │ versions.tf          │
+# │ Provider: random             │ = 3.9.0              │ versions.tf          │
 # └──────────────────────────────┴──────────────────────┴──────────────────────┘
 #
 # DECISION: Exact version pins (=) for reproducible deployments.
@@ -33,11 +33,11 @@ terraform {
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "= 1.60.1"
+      version = "= 1.65.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = "= 3.8.1"
+      version = "= 3.9.0"
     }
   }
 }
