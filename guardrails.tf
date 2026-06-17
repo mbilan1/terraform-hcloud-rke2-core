@@ -72,6 +72,15 @@ check "delete_protection_advisory" {
   }
 }
 
+# ─── Control Plane Bootstrap Reassignment ────────────────────────────────────
+
+check "control_plane_bootstrap_join_address_required" {
+  assert {
+    condition     = !(var.control_plane_bootstrap_complete && var.control_plane_bootstrap_join_address == "")
+    error_message = "control_plane_bootstrap_join_address must be set to a surviving control-plane peer private IP when control_plane_bootstrap_complete is true."
+  }
+}
+
 # ─── Subnet Must Be Within Network CIDR ─────────────────────────────────────
 
 # DECISION: Validate subnet containment at plan time instead of failing at apply.

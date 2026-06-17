@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-18
+
+### Added
+
+- **Initial-node bootstrap reassignment**: Node-side `control_plane_bootstrap_complete` + `control_plane_bootstrap_join_address` variables. After genesis, setting `control_plane_bootstrap_complete = true` makes a RE-PROVISIONED initial control-plane node render as a joining RKE2 server (`is_initial = false`, `server` pointed at a surviving CP peer's private IP) instead of re-running cluster-init. This enables quorum-safe re-provision / OS-migration of the initial CP node **without re-initializing etcd** (avoiding a new empty etcd data-loss SPOF). Peer join is by private IP — explicitly **NO load balancer** of any kind. See ADR-016 L3a.
+
+## [0.5.0] - 2026-06-17
+
 ### Changed
 
 - **OS image default**: Bumped from `ubuntu-24.04` to `ubuntu-26.04` (root `var.hcloud_image` + `_control_plane` submodule). NOTE: Ubuntu 26.04 LTS (released 2026-04) is available on Hetzner Cloud (`ubuntu-26.04`, added 2026-05-18) but is **not yet listed in the RKE2 v1.35 / Rancher 2.14 support matrix** (validated: 24.04/22.04/20.04). Adopted per explicit operator requirement; revisit once it appears in the matrix.

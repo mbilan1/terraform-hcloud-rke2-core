@@ -107,6 +107,20 @@ variable "extra_server_manifests" {
   nullable    = false
 }
 
+variable "control_plane_bootstrap_complete" {
+  description = "After the initial cluster bootstrap, set true so a RE-PROVISIONED initial node renders as a joining RKE2 server (joins existing etcd) instead of re-running cluster-init. MUST remain false during the very first genesis apply, otherwise no node bootstraps the cluster."
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
+variable "control_plane_bootstrap_join_address" {
+  description = "Private IPv4 of a surviving control-plane peer, used as the re-provisioned initial node server target. Required when control_plane_bootstrap_complete is true."
+  type        = string
+  default     = ""
+  nullable    = false
+}
+
 variable "delete_protection" {
   description = "Enable deletion and rebuild protection on servers."
   type        = bool

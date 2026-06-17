@@ -48,6 +48,18 @@ locals {
 
 # NOTE: The initial master bootstraps the cluster. It is created first so that
 #       its private IP can be passed to joining nodes' cloud-init config.
+#
+# DECISION: The initial node is re-provisionable as a joining RKE2 server.
+# Why: Re-creating the initial node with is_initial=true would re-run
+#      cluster-init and create a NEW empty etcd — a data-loss SPOF. With
+#      control_plane_bootstrap_complete=true the initial node renders
+#      is_initial=false and points its server at a surviving CP peer, so it
+#      joins the existing etcd quorum on rebuild/OS-migration. On the very
+#      first genesis apply the flag is false so this node bootstraps the
+#      cluster. NO load balancer is involved — peer join is by private IP.
+# Why: RKE2 ignores the server field when an etcd datastore already exists on
+#      disk, so a healthy initial node is unaffected; only a fresh disk joins.
+# See: ADR-016 L3a in rke2-hetzner-architecture
 resource "hcloud_server" "initial" {
   for_each = var.create ? { (local.initial_master) = var.nodes[local.initial_master] } : {}
 
@@ -61,13 +73,13 @@ resource "hcloud_server" "initial" {
 
   user_data = templatefile("${path.module}/templates/cloud-init.yaml.tftpl", {
     hostname                  = "${var.cluster_name}-${each.key}"
-    is_initial                = true
+    is_initial                = !var.control_plane_bootstrap_complete
     rke2_version              = var.rke2_version
     rke2_config               = var.rke2_config
     enable_cis                = var.enable_cis
     cis_psa_exempt_namespaces = var.cis_psa_exempt_namespaces
     cluster_token             = var.cluster_token
-    join_address              = ""
+    join_address              = var.control_plane_bootstrap_complete ? var.control_plane_bootstrap_join_address : ""
     extra_server_manifests    = var.extra_server_manifests
   })
 

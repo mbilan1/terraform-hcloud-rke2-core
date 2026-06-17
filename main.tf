@@ -93,6 +93,9 @@ module "control_plane" {
 
   cis_psa_exempt_namespaces = var.cis_psa_exempt_namespaces
 
+  control_plane_bootstrap_complete     = var.control_plane_bootstrap_complete
+  control_plane_bootstrap_join_address = var.control_plane_bootstrap_join_address
+
   extra_server_manifests = var.extra_server_manifests
 
   delete_protection = var.delete_protection
