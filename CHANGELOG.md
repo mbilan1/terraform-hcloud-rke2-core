@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **RKE2 default version**: Bumped from `v1.35.5+rke2r2` to `v1.35.6+rke2r1` (latest patch in the Rancher-2.14.2-certified `1.35` minor — **1.36 remains uncertified**). Security-driven patch bump (upstream 2026-06 component refresh). Aligned the version-registry table, root `var.rke2_version` default, `_control_plane` submodule default, `examples/complete`, and the README version badge.
+- **hcloud provider**: Bumped `= 1.65.0` → `= 1.66.0` (latest stable; deprecations only). Aligned versions.tf constraint + registry table + README badge.
 
 ## [0.6.0] - 2026-06-18
 

@@ -16,7 +16,7 @@
 # │ RKE2 / Kubernetes            │ v1.35.6+rke2r1       │ var.rke2_version     │
 # │ OS image                     │ ubuntu-26.04         │ var.hcloud_image     │
 # ├──────────────────────────────┼──────────────────────┼──────────────────────┤
-# │ Provider: hcloud             │ = 1.65.0             │ versions.tf          │
+# │ Provider: hcloud             │ = 1.66.0             │ versions.tf          │
 # │ Provider: random             │ = 3.9.0              │ versions.tf          │
 # └──────────────────────────────┴──────────────────────┴──────────────────────┘
 #
@@ -33,7 +33,7 @@ terraform {
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "= 1.65.0"
+      version = "= 1.66.0"
     }
     random = {
       source  = "hashicorp/random"
