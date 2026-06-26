@@ -75,7 +75,7 @@ variable "cluster_token" {
 variable "rke2_version" {
   description = "RKE2 version to install."
   type        = string
-  default     = "v1.35.5+rke2r2"
+  default     = "v1.35.6+rke2r1"
   nullable    = false
 }
 

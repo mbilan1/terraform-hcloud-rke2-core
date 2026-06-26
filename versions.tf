@@ -13,7 +13,7 @@
 # │ Component                    │ Version              │ Defined in           │
 # ├──────────────────────────────┼──────────────────────┼──────────────────────┤
 # │ OpenTofu (runtime)           │ >= 1.8.0             │ versions.tf          │
-# │ RKE2 / Kubernetes            │ v1.35.5+rke2r2       │ var.rke2_version     │
+# │ RKE2 / Kubernetes            │ v1.35.6+rke2r1       │ var.rke2_version     │
 # │ OS image                     │ ubuntu-26.04         │ var.hcloud_image     │
 # ├──────────────────────────────┼──────────────────────┼──────────────────────┤
 # │ Provider: hcloud             │ = 1.65.0             │ versions.tf          │

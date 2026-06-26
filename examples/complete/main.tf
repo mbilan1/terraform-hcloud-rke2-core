@@ -17,7 +17,7 @@ module "rke2" {
   hcloud_network_zone = "eu-central"
 
   # Pin RKE2 version for reproducible deployments
-  rke2_version = "v1.35.5+rke2r2"
+  rke2_version = "v1.35.6+rke2r1"
 
   # HA control plane (3 nodes for etcd quorum)
   # NOTE: cx32/cx42 retired by Hetzner 2026 — replaced with cx33/cx43 (same specs).
