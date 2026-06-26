@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-06-27
+
+### Fixed
+
+- **hcloud pin lockstep (submodules)**: Bumped the hcloud provider pin `= 1.65.0` → `= 1.66.0` in the `_control_plane` and `_network` submodules. v0.7.0 bumped only the root `versions.tf`, leaving both submodules at `= 1.65.0` — an exact-pin conflict that broke provider resolution in any consumer (the dependency tree must share a single exact hcloud version, per each submodule's own DECISION comment). Surfaced by provider resolution in the consumer root.
+
 ## [0.7.0] - 2026-06-27
 
 ### Changed
