@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-06-27
+
+### Fixed
+
+- **hcloud `datacenter` deprecation noise (`for_each` projection)**: `hcloud_server_network.initial` / `.joining` iterated `for_each = hcloud_server.*`, passing the whole server objects — which surfaced the resource's deprecated computed attributes (`datacenter`, `allow_deprecated_images`, `backup_window`) and emitted ~188 "Value derived from a deprecated source" warning lines on every plan/test, even though only `.id` is consumed. Projected `for_each` to an id-only map (`{ for k, v in hcloud_server.* : k => v.id }`). Warning-free and removal-proof for the hcloud `datacenter` attribute (removed after 2026-07-01, https://docs.hetzner.cloud/changelog#2025-12-16-phasing-out-datacenters). No behavior change — same instances, same keys; cosmetic/hygiene only.
+
 ## [0.7.1] - 2026-06-27
 
 ### Fixed

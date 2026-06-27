@@ -106,9 +106,17 @@ resource "hcloud_server" "initial" {
 # ─── Initial Master Network Attachment ────────────────────────────────────────
 
 resource "hcloud_server_network" "initial" {
-  for_each = hcloud_server.initial
+  # DECISION: Iterate a projected id-only map, not the whole server objects.
+  # Why: for_each over hcloud_server.* carries the resource's deprecated computed
+  #      attributes (datacenter / allow_deprecated_images / backup_window), so
+  #      OpenTofu emits "Value derived from a deprecated source" on every plan/test
+  #      even though only .id is consumed here. The hcloud `datacenter` attribute is
+  #      removed after 2026-07-01. Projecting to the id keeps a stable key and
+  #      surfaces no deprecated fields (warning-free, removal-proof).
+  # See: https://docs.hetzner.cloud/changelog#2025-12-16-phasing-out-datacenters
+  for_each = { for k, v in hcloud_server.initial : k => v.id }
 
-  server_id  = each.value.id
+  server_id  = each.value
   network_id = var.network_id
 }
 
@@ -158,8 +166,10 @@ resource "hcloud_server" "joining" {
 # ─── Joining Nodes Network Attachment ─────────────────────────────────────────
 
 resource "hcloud_server_network" "joining" {
-  for_each = hcloud_server.joining
+  # See hcloud_server_network.initial — project to an id-only map so for_each does
+  # not surface the deprecated hcloud_server computed attributes.
+  for_each = { for k, v in hcloud_server.joining : k => v.id }
 
-  server_id  = each.value.id
+  server_id  = each.value
   network_id = var.network_id
 }
