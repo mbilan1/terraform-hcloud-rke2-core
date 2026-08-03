@@ -401,3 +401,99 @@ run "cis_psa_exempt_namespaces_ignored_when_cis_disabled" {
     ]
   }
 }
+
+# ─── Agent nodes (workers) ────────────────────────────────────────────────────
+
+# NOTE: agent_nodes defaults to {} — the module's primary shape is a
+#       control-plane-only cluster. These runs cover the opt-in path.
+
+run "agent_nodes_default_empty_is_control_plane_only" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    delete_protection = true
+  }
+
+  assert {
+    condition     = length(module.agent.server_ids) == 0
+    error_message = "agent_nodes defaults to empty — no agent servers may be planned."
+  }
+}
+
+run "agent_nodes_single_worker" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    delete_protection = true
+    agent_nodes = {
+      "worker-0" = {
+        server_type = "cx33"
+        node_labels = ["node-role.kubernetes.io/worker=true"]
+      }
+    }
+  }
+
+  assert {
+    condition     = length(module.agent.server_ids) == 1
+    error_message = "One agent node must produce exactly one server."
+  }
+}
+
+run "agent_nodes_multiple_workers_stable_keys" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    delete_protection = true
+    agent_nodes = {
+      "worker-0" = { server_type = "cx23" }
+      "worker-1" = { server_type = "cx33" }
+    }
+  }
+
+  assert {
+    condition     = length(module.agent.server_ids) == 2
+    error_message = "Two agent nodes must produce two servers keyed by their map keys."
+  }
+
+  assert {
+    condition     = contains(keys(module.agent.server_ids), "worker-1")
+    error_message = "Agent outputs must be keyed by the node identifier, not by index."
+  }
+}
+
+run "agent_nodes_with_taints_and_labels" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    delete_protection = true
+    agent_nodes = {
+      "worker-0" = {
+        server_type = "cx33"
+        node_labels = ["workload=addons"]
+        node_taints = ["dedicated=addons:NoSchedule"]
+      }
+    }
+  }
+}
+
+run "agent_nodes_not_created_when_create_false" {
+  command = plan
+
+  variables {
+    cluster_name      = "test-cluster"
+    delete_protection = true
+    create            = false
+    agent_nodes = {
+      "worker-0" = { server_type = "cx33" }
+    }
+  }
+
+  assert {
+    condition     = length(module.agent.server_ids) == 0
+    error_message = "create=false must be a no-op for agents as well as control plane."
+  }
+}

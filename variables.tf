@@ -126,6 +126,37 @@ variable "ssh_key_ids" {
 
 # ─── Node Definitions ────────────────────────────────────────────────────────
 
+# DECISION: Agent nodes are opt-in and default to none.
+# Why: The module's primary shape is a control-plane-only cluster (management
+#      planes, small clusters). Workers are added when a cluster needs workload
+#      capacity separate from its control plane — ADR-013.
+variable "agent_nodes" {
+  description = <<-EOT
+    Map of agent (worker) node definitions. Keys are stable node identifiers.
+    Empty by default — a cluster with no agents is control-plane-only.
+
+    node_labels / node_taints are passed to RKE2 at registration, so they
+    survive restarts without a separate kubectl step. Example:
+
+      agent_nodes = {
+        "worker-0" = {
+          server_type = "cx33"
+          node_labels = ["node-role.kubernetes.io/worker=true"]
+        }
+      }
+  EOT
+  type = map(object({
+    server_type = optional(string, "cx23")
+    location    = optional(string)
+    labels      = optional(map(string), {})
+    backups     = optional(bool, false)
+    node_labels = optional(list(string), [])
+    node_taints = optional(list(string), [])
+  }))
+  default  = {}
+  nullable = false
+}
+
 variable "control_plane_nodes" {
   description = "Map of control plane node definitions. Keys are node identifiers, values configure each server."
   type = map(object({

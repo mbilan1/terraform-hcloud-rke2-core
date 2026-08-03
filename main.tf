@@ -104,6 +104,36 @@ module "control_plane" {
   depends_on = [module.network]
 }
 
+# ─── Agent Nodes ──────────────────────────────────────────────────────────────
+
+# DECISION: Agents join through the initial master's PRIVATE IP, and depend on
+#           readiness rather than merely on the control-plane resources.
+# Why: An agent whose supervisor is not yet serving on :9345 retries, but a
+#      cluster that is still bootstrapping produces confusing partial failures.
+#      Gating on readiness makes the ordering explicit and the apply legible.
+module "agent" {
+  source = "./modules/_agent"
+
+  create          = var.create
+  cluster_name    = var.cluster_name
+  nodes           = var.agent_nodes
+  hcloud_location = var.hcloud_location
+  hcloud_image    = var.hcloud_image
+  ssh_key_ids     = var.ssh_key_ids
+  firewall_ids    = var.firewall_ids
+  network_id      = module.network.network_id
+  cluster_token   = try(random_password.cluster_token["this"].result, "")
+  join_address    = var.create ? module.control_plane.initial_master_private_ipv4 : ""
+  rke2_version    = var.rke2_version
+  rke2_config     = var.rke2_config
+  enable_cis      = var.enable_cis
+
+  delete_protection = var.delete_protection
+  labels            = local.common_labels
+
+  depends_on = [module.readiness]
+}
+
 # ─── Readiness ────────────────────────────────────────────────────────────────
 
 module "readiness" {

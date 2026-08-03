@@ -1,0 +1,90 @@
+#cloud-config
+# ──────────────────────────────────────────────────────────────────────────────
+# RKE2 Agent (Worker) Node — Cloud-Init Template
+#
+# DECISION: Separate template from the control-plane one.
+# Why: An agent has no etcd, no manifests directory, no PSA admission config and
+#      a different systemd unit (rke2-agent). Folding both into one template
+#      would make every conditional harder to read than two small files.
+# See: https://docs.rke2.io/install/quickstart#linux-agent-worker-node-installation
+# ──────────────────────────────────────────────────────────────────────────────
+
+hostname: ${hostname}
+
+write_files:
+  # RKE2 agent configuration
+  - path: /etc/rancher/rke2/config.yaml
+    permissions: "0600"
+    content: |
+      token: ${cluster_token}
+      server: https://${join_address}:9345
+%{ if enable_cis ~}
+      profile: cis
+%{ endif ~}
+%{ for label in node_labels ~}
+      node-label:
+        - ${label}
+%{ endfor ~}
+%{ for taint in node_taints ~}
+      node-taint:
+        - ${taint}
+%{ endfor ~}
+%{ if rke2_config != "" ~}
+      ${indent(6, rke2_config)}
+%{ endif ~}
+
+runcmd:
+  # Wait for cloud-init networking to stabilize before install (see _control_plane).
+  - sleep 5
+
+%{ if enable_cis ~}
+  # CIS prerequisites — idempotent (safe on both stock and Packer images).
+  # NOTE: no etcd user here — an agent runs no etcd.
+  # See: https://docs.rke2.io/security/hardening_guide
+  - |
+    cat > /etc/sysctl.d/90-rke2-cis.conf << 'SYSCTL'
+    vm.panic_on_oom=0
+    vm.overcommit_memory=1
+    kernel.panic=10
+    kernel.panic_on_oops=1
+    SYSCTL
+  - sysctl --system
+%{ endif ~}
+
+  # DECISION: INSTALL_RKE2_TYPE=agent.
+  # Why: The installer defaults to "server". Without this the node would try to
+  #      start an apiserver and etcd, and the join would fail.
+  - |
+    if [ ! -f /etc/rke2-image-version ]; then
+%{ if rke2_version != "" ~}
+      curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${rke2_version}" INSTALL_RKE2_TYPE="agent" sh -
+%{ else ~}
+      curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE="agent" sh -
+%{ endif ~}
+    fi
+
+  # Detect the private IP at runtime and inject node-ip (see INV-005).
+  # Without it RKE2 advertises the public IP, and the Hetzner firewall — which
+  # only applies to the public interface — blocks internal cluster traffic.
+  - |
+    for i in $(seq 1 60); do
+      PRIVATE_IP=$(curl -sf http://169.254.169.254/hetzner/v1/metadata/private-networks \
+        | grep -E '^- ip:' | head -1 | awk '{print $3}')
+      if [ -n "$PRIVATE_IP" ]; then
+        echo "node-ip: $PRIVATE_IP" >> /etc/rancher/rke2/config.yaml
+        break
+      fi
+      sleep 2
+    done
+    if [ -z "$PRIVATE_IP" ]; then
+      echo "FATAL: Could not detect private IP from Hetzner metadata after 120s" >&2
+      exit 1
+    fi
+
+  # Enable and start the RKE2 agent
+  - systemctl enable rke2-agent.service
+  - systemctl start rke2-agent.service
+
+  # Add RKE2 binaries to PATH.
+  # NOTE: no KUBECONFIG export — an agent node holds no admin kubeconfig.
+  - echo 'export PATH=$PATH:/var/lib/rancher/rke2/bin' >> /etc/profile.d/rke2.sh

@@ -56,3 +56,13 @@ output "cluster_ready" {
   description = "Boolean indicating the cluster API server is responsive."
   value       = try(module.readiness.cluster_ready, false)
 }
+
+output "agent_server_ids" {
+  description = "Map of agent node key => Hetzner server ID."
+  value       = module.agent.server_ids
+}
+
+output "agent_private_ipv4_addresses" {
+  description = "Map of agent node key => private IPv4 address on the cluster network."
+  value       = module.agent.server_private_ipv4_addresses
+}
